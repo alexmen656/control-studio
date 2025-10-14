@@ -2,7 +2,8 @@
 import { IgApiClient, IgLoginTwoFactorRequiredError } from 'instagram-private-api'
 import inquirer from 'inquirer'
 import 'dotenv/config'
-import { get } from 'request-promise'
+import rp from 'request-promise';
+const { get } = rp;
 
 const instagramPost = async () => {
   const ig = new IgApiClient()
@@ -23,10 +24,10 @@ const instagramPost = async () => {
     })
 
     console.log(publishResult)
-  } catch (err: any) {
-    if (err instanceof IgLoginTwoFactorRequiredError) {
+  } catch (error) {
+    if (error instanceof IgLoginTwoFactorRequiredError) {
       const { username, totp_two_factor_on, two_factor_identifier } =
-        err.response.body.two_factor_info
+        error.response.body.two_factor_info
       const verificationMethod = totp_two_factor_on ? '0' : '1'
 
       const { code } = await inquirer.prompt([
@@ -52,4 +53,4 @@ const instagramPost = async () => {
   }
 }
 
-export default instagramPost
+export { instagramPost }
