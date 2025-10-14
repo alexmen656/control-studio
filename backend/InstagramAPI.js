@@ -76,6 +76,6 @@ const postVideo = async () => {
   console.log(publishResult);
 }
 
-postVideo();
+//postVideo();
 
 export { postImage, postVideo }
