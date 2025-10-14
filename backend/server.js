@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import bodyParser from 'body-parser'
-import { instagramPost } from './login_insta2.js'
+import { instagramPost } from './InstagramAPI.js'
 
 const app = express()
 const PORT = process.env.PORT || 6709

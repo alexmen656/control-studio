@@ -1,11 +1,16 @@
 /* tslint:disable:no-console */
 import { IgApiClient, IgLoginTwoFactorRequiredError } from 'instagram-private-api'
 import inquirer from 'inquirer'
-import 'dotenv/config'
+import dotenv from 'dotenv'
 import rp from 'request-promise';
-const { get } = rp;
+import { readFile } from 'fs';
+import { promisify } from 'util';
+const readFileAsync = promisify(readFile);
 
-const instagramPost = async () => {
+const { get } = rp;
+dotenv.config({ path: '.env' })
+
+const postImage = async () => {
   const ig = new IgApiClient()
   ig.state.generateDevice(process.env.IG_USERNAME)
 
@@ -53,4 +58,24 @@ const instagramPost = async () => {
   }
 }
 
-export { instagramPost }
+const postVideo = async () => {
+  const ig = new IgApiClient()
+  ig.state.generateDevice(process.env.IG_USERNAME)
+
+  const auth = await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD)
+  console.log('Login erfolgreich!')
+
+  const videoPath = 'test2.mp4';
+  const coverPath = 'test.jpeg';
+
+  const publishResult = await ig.publish.video({
+    video: await readFileAsync(videoPath),
+    coverImage: await readFileAsync(coverPath),
+  });
+
+  console.log(publishResult);
+}
+
+postVideo();
+
+export { postImage, postVideo }
