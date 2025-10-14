@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 const API_URL = 'http://localhost:6709/api'
 
@@ -342,7 +344,8 @@ const formatViews = (views?: number) => {
             </div>
           </div>
           <div class="p-4">
-            <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2 truncate">{{ video.title }}</h3>
+            <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2 truncate"
+              @click="router.push({ name: 'video', params: { id: video.id } })">{{ video.title }}</h3>
             <div class="flex items-center gap-2 mb-3">
               <span :class="['text-xs px-2 py-1 rounded-full font-medium', getStatusColor(video.status)]">
                 {{ video.status.charAt(0).toUpperCase() + video.status.slice(1) }}
@@ -426,8 +429,9 @@ const formatViews = (views?: number) => {
                     </div>
                   </div>
                   <div class="min-w-0">
-                    <div class="font-medium text-gray-900 dark:text-gray-100 truncate">{{
-                      video.title }}</div>
+                    <div class="font-medium text-gray-900 dark:text-gray-100 truncate"
+                      @click="router.push({ name: 'video', params: { id: video.id } })">{{
+                        video.title }}</div>
                     <div v-if="video.progress !== undefined" class="mt-1">
                       <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                         <div class="bg-red-500 h-full" :style="{ width: `${video.progress}%` }">

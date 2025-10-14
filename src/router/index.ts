@@ -15,6 +15,11 @@ const router = createRouter({
       component: () => import('../views/HomeView.vue'),
     },
     {
+      path: '/video/:id',
+      name: 'video',
+      component: () => import('../views/VideoView.vue'),
+    },
+    {
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('../views/HomeView.vue'),
