@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+
+const API_URL = 'http://localhost:6709/api'
 
 interface Video {
   id: string
@@ -7,64 +9,153 @@ interface Video {
   thumbnail: string
   duration: string
   size: string
-  uploadDate: Date
+  uploadDate: Date | string
   status: 'ready' | 'uploading' | 'processing' | 'scheduled' | 'published' | 'failed'
   progress?: number
   platforms: Array<'instagram' | 'tiktok' | 'youtube' | 'facebook'>
   views?: number
+  filename?: string
+  originalName?: string
 }
 
-const videos = ref<Video[]>([
-  {
-    id: '1',
-    title: 'Summer Vibes 2024',
-    thumbnail: 'https://via.placeholder.com/400x225',
-    duration: '0:45',
-    size: '24.5 MB',
-    uploadDate: new Date('2024-10-10'),
-    status: 'published',
-    platforms: ['instagram', 'tiktok'],
-    views: 12540
-  },
-  {
-    id: '2',
-    title: 'Product Launch Video',
-    thumbnail: 'https://via.placeholder.com/400x225',
-    duration: '1:30',
-    size: '45.2 MB',
-    uploadDate: new Date('2024-10-12'),
-    status: 'scheduled',
-    platforms: ['youtube', 'facebook']
-  },
-  {
-    id: '3',
-    title: 'Behind the Scenes',
-    thumbnail: 'https://via.placeholder.com/400x225',
-    duration: '2:15',
-    size: '67.8 MB',
-    uploadDate: new Date('2024-10-13'),
-    status: 'uploading',
-    platforms: ['instagram'],
-    progress: 67
-  },
-  {
-    id: '4',
-    title: 'Tutorial: Getting Started',
-    thumbnail: 'https://via.placeholder.com/400x225',
-    duration: '5:20',
-    size: '120.5 MB',
-    uploadDate: new Date('2024-10-14'),
-    status: 'processing',
-    platforms: ['youtube'],
-    progress: 45
-  }
-])
-
+const videos = ref<Video[]>([])
 const viewMode = ref<'grid' | 'list'>('grid')
 const selectedVideos = ref<Set<string>>(new Set())
 const filterStatus = ref<string>('all')
 const searchQuery = ref('')
 const showUploadModal = ref(false)
+const uploadingFiles = ref<File[]>([])
+const uploadProgress = ref<{ [key: string]: number }>({})
+const isLoading = ref(false)
+
+const loadVideos = async () => {
+  try {
+    isLoading.value = true
+    const response = await fetch(`${API_URL}/videos`)
+    if (response.ok) {
+      const data = await response.json()
+      videos.value = data.map((v: any) => ({
+        ...v,
+        uploadDate: new Date(v.uploadDate)
+      }))
+    }
+  } catch (error) {
+    console.error('Error loading videos:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleFileSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files || input.files.length === 0) return
+
+  const files = Array.from(input.files)
+  await uploadFiles(files)
+}
+
+const uploadFiles = async (files: File[]) => {
+  for (const file of files) {
+    try {
+      const formData = new FormData()
+      formData.append('video', file)
+      formData.append('title', file.name.replace(/\.[^/.]+$/, ''))
+
+      const tempId = `temp-${Date.now()}`
+      videos.value.unshift({
+        id: tempId,
+        title: file.name.replace(/\.[^/.]+$/, ''),
+        thumbnail: 'https://via.placeholder.com/400x225',
+        duration: '0:00',
+        size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+        uploadDate: new Date(),
+        status: 'uploading',
+        progress: 0,
+        platforms: [],
+        views: 0
+      })
+
+      const response = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        body: formData
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        const index = videos.value.findIndex(v => v.id === tempId)
+        if (index !== -1) {
+          videos.value[index] = {
+            ...result.video,
+            uploadDate: new Date(result.video.uploadDate)
+          }
+        }
+      } else {
+        const index = videos.value.findIndex(v => v.id === tempId)
+        if (index !== -1) {
+          videos.value[index].status = 'failed'
+        }
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error)
+    }
+  }
+
+  showUploadModal.value = false
+}
+
+const triggerFileUpload = () => {
+  const input = document.getElementById('video-file-input') as HTMLInputElement
+  if (input) input.click()
+}
+
+const deleteVideo = async (id: string) => {
+  if (!confirm('Delete this video?')) return
+
+  try {
+    const response = await fetch(`${API_URL}/videos/${id}`, {
+      method: 'DELETE'
+    })
+
+    if (response.ok) {
+      videos.value = videos.value.filter(v => v.id !== id)
+    }
+  } catch (error) {
+    console.error('Error deleting video:', error)
+  }
+}
+
+const bulkDelete = async () => {
+  if (!confirm(`Delete ${selectedVideos.value.size} selected videos?`)) return
+
+  try {
+    const response = await fetch(`${API_URL}/videos/bulk-delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ videoIds: Array.from(selectedVideos.value) })
+    })
+
+    if (response.ok) {
+      videos.value = videos.value.filter(v => !selectedVideos.value.has(v.id))
+      selectedVideos.value.clear()
+    }
+  } catch (error) {
+    console.error('Error bulk deleting videos:', error)
+  }
+}
+
+const handleDrop = (event: DragEvent) => {
+  const files = event.dataTransfer?.files
+  if (files && files.length > 0) {
+    const videoFiles = Array.from(files).filter(file => file.type.startsWith('video/'))
+    if (videoFiles.length > 0) {
+      uploadFiles(videoFiles)
+    }
+  }
+}
+
+onMounted(() => {
+  loadVideos()
+})
 
 const filteredVideos = computed(() => {
   return videos.value.filter(video => {
@@ -112,19 +203,13 @@ const getPlatformIcon = (platform: string) => {
   return icons[platform as keyof typeof icons] || '📱'
 }
 
-const bulkDelete = () => {
-  if (confirm(`Delete ${selectedVideos.value.size} selected videos?`)) {
-    videos.value = videos.value.filter(v => !selectedVideos.value.has(v.id))
-    selectedVideos.value.clear()
-  }
-}
-
 const bulkSchedule = () => {
   alert(`Schedule ${selectedVideos.value.size} videos`)
 }
 
-const formatDate = (date: Date) => {
-  return date.toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' })
+const formatDate = (date: Date | string) => {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 const formatViews = (views?: number) => {
@@ -381,7 +466,8 @@ const formatViews = (views?: number) => {
                         d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                     </svg>
                   </button>
-                  <button class="p-1.5 text-gray-400 hover:text-red-600 transition-colors" title="Delete">
+                  <button @click="deleteVideo(video.id)"
+                    class="p-1.5 text-gray-400 hover:text-red-600 transition-colors" title="Delete">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd"
                         d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
@@ -423,16 +509,20 @@ const formatViews = (views?: number) => {
             </svg>
           </button>
         </div>
-        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-12 text-center">
+        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-12 text-center"
+          @drop.prevent="handleDrop" @dragover.prevent @click="triggerFileUpload">
           <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
           </svg>
           <p class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Drop your videos here</p>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">or click to browse</p>
-          <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors font-medium">
+          <button @click.stop="triggerFileUpload"
+            class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors font-medium">
             Choose Files
           </button>
+          <input id="video-file-input" type="file" multiple accept="video/*" class="hidden"
+            @change="handleFileSelect" />
         </div>
       </div>
     </div>
