@@ -126,7 +126,7 @@ app.post('/api/upload', upload.single('video'), (req, res) => {
       size: stats.size,
       sizeBytes: stats.sizeBytes,
       uploadDate: new Date().toISOString(),
-      status: 'ready',
+      status: 'awaiting-details',
       progress: 100,
       platforms: req.body.platforms ? JSON.parse(req.body.platforms) : [],
       views: 0,
@@ -167,7 +167,7 @@ app.post('/api/upload-multiple', upload.array('videos', 10), (req, res) => {
         size: stats.size,
         sizeBytes: stats.sizeBytes,
         uploadDate: new Date().toISOString(),
-        status: 'ready',
+        status: 'awaiting-details',
         progress: 100,
         platforms: [],
         views: 0,
@@ -208,6 +208,33 @@ app.put('/api/videos/:id', (req, res) => {
     writeVideos(data)
     res.json({
       message: 'Video updated successfully',
+      video: data.videos[videoIndex]
+    })
+  } catch (error) {
+    console.error('Error updating video:', error)
+    res.status(500).json({ error: 'Error updating video' })
+  }
+})
+
+app.patch('/api/videos/:id', (req, res) => {
+  try {
+    const data = readVideos()
+    const videoIndex = data.videos.findIndex(v => v.id === req.params.id)
+
+    if (videoIndex === -1) {
+      return res.status(404).json({ error: 'Video not found' })
+    }
+
+    data.videos[videoIndex] = {
+      ...data.videos[videoIndex],
+      ...req.body,
+      id: req.params.id,
+      updatedAt: new Date().toISOString()
+    }
+
+    writeVideos(data)
+    res.json({
+      message: 'Video details updated successfully',
       video: data.videos[videoIndex]
     })
   } catch (error) {
