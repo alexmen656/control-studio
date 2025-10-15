@@ -35,9 +35,9 @@ const router = createRouter({
       component: () => import('../views/PlanView.vue'),
     },
     {
-      path: '/starred',
-      name: 'starred',
-      component: () => import('../views/HomeView.vue'),
+      path: '/accounts',
+      name: 'accounts',
+      component: () => import('../views/AccountsView.vue'),
     },
     {
       path: '/trash',
