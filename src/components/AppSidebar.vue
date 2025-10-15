@@ -49,16 +49,16 @@
                 </svg>
                 <span class="text-sm font-medium">My Videos</span>
             </router-link>
-            <router-link to="/shared"
+            <router-link to="/planning"
                 class="flex items-center space-x-3 px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full transition-colors"
                 active-class="bg-red-100 dark:bg-red-900/30 text-primary-700 dark:text-primary-200 hover:bg-primary-100 dark:hover:bg-red-900/40">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path
                         d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                 </svg>
-                <span class="text-sm font-medium">Shared with me</span>
+                <span class="text-sm font-medium">Planning</span>
             </router-link>
-            <router-link to="/recent"
+            <router-link to="/schedule"
                 class="flex items-center space-x-3 px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full transition-colors"
                 active-class="bg-red-100 dark:bg-red-900/30 text-primary-700 dark:text-primary-200 hover:bg-primary-100 dark:hover:bg-red-900/40">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -66,7 +66,7 @@
                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
                         clip-rule="evenodd" />
                 </svg>
-                <span class="text-sm font-medium">Recent</span>
+                <span class="text-sm font-medium">Schedule</span>
             </router-link>
             <router-link to="/starred"
                 class="flex items-center space-x-3 px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full transition-colors"
@@ -95,7 +95,7 @@
                 <div class="space-y-2">
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-gray-600 dark:text-gray-400">{{ storageUsed }} {{ unit }} of {{ storageTotal
-                        }}
+                            }}
                             GB
                             used</span>
                     </div>

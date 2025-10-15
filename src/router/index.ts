@@ -25,14 +25,14 @@ const router = createRouter({
       component: () => import('../views/HomeView.vue'),
     },
     {
-      path: '/shared',
-      name: 'shared',
-      component: () => import('../views/HomeView.vue'),
+      path: '/schedule',
+      name: 'schedule',
+      component: () => import('../views/CalendarView.vue'),
     },
     {
-      path: '/recent',
-      name: 'recent',
-      component: () => import('../views/HomeView.vue'),
+      path: '/planning',
+      name: 'planning',
+      component: () => import('../views/PlanView.vue'),
     },
     {
       path: '/starred',
