@@ -6,6 +6,7 @@ import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { uploadVideo, authorize } from './platforms/youtubeAPI.js'
+import * as tiktokAPI from './platforms/tiktokAPI.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -324,8 +325,13 @@ app.post('/api/connect/:platform', async (req, res) => {
         break;
 
       case 'tiktok':
-        res.json({ message: 'Connected to Tiktok successfully' })
-        break;
+        const tiktokResult = await tiktokAPI.authorize();
+
+        if (tiktokResult.authUrl) {
+          return res.json({ authUrl: tiktokResult.authUrl });
+        } else {
+          return res.json({ message: 'Connected to TikTok successfully' });
+        }
 
       default:
         return res.status(400).json({ error: 'Unsupported platform' })
@@ -351,6 +357,28 @@ app.get('/api/oauth2callback/youtube', async (req, res) => {
   } catch (error) {
     console.error('Error during YouTube OAuth2 callback:', error);
     res.status(500).send('Error during YouTube authorization');
+  }
+});
+
+app.get('/api/oauth2callback/tiktok', async (req, res) => {
+  const { code, state, error, error_description } = req.query;
+
+  if (error) {
+    console.error('TikTok OAuth error:', error, error_description);
+    return res.redirect(`http://localhost:5185/accounts?error=${error}`);
+  }
+
+  if (!code) {
+    return res.status(400).send('Authorization code not provided');
+  }
+
+  try {
+    await tiktokAPI.exchangeCodeForToken(code, state);
+
+    res.redirect('http://localhost:5185/accounts?tiktok=connected');
+  } catch (error) {
+    console.error('Error during TikTok OAuth2 callback:', error);
+    res.redirect('http://localhost:5185/accounts?error=tiktok_auth_failed');
   }
 });
 
