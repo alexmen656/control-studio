@@ -303,6 +303,34 @@ app.post('/api/videos/bulk-delete', (req, res) => {
   }
 })
 
+app.post('/api/connect/:platform', (req, res) => {
+  try {
+
+    const { platform } = req.params
+
+    switch (platform) {
+      case 'youtube':
+        res.json({ message: 'Connected to YouTube successfully' })
+        break;
+
+      case 'instagram':
+        res.json({ message: 'Connected to Instagram successfully' })
+        break;
+
+      case 'tiktok':
+        res.json({ message: 'Connected to Tiktok successfully' })
+        break;
+
+      default:
+        return res.status(400).json({ error: 'Unsupported platform' })
+        break;
+    }
+  } catch (error) {
+    console.error('Error connecting to platform:', error)
+    res.status(500).json({ error: 'Error connecting to platform' })
+  }
+})
+
 app.post('/instagram', async (req, res) => {
   try {
     res.status(200).send('Instagram integration coming soon!')
