@@ -22,7 +22,6 @@ export function uploadVideo(videoFile) {
     });
 }
 
-// Authenticate OAuth2
 function authorize(credentials, callback) {
     const { client_secret, client_id, redirect_uris } = credentials;
     const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
@@ -36,7 +35,6 @@ function authorize(credentials, callback) {
     });
 }
 
-// Get new authentication token
 function getNewToken(oAuth2Client, callback) {
     const authUrl = oAuth2Client.generateAuthUrl({
         access_type: 'offline',
@@ -64,7 +62,6 @@ function getNewToken(oAuth2Client, callback) {
     });
 }
 
-// Upload video to YouTube
 function uploadToYouTube(auth, videoFile) {
     const youtube = google.youtube({ version: 'v3', auth });
 
@@ -78,7 +75,7 @@ function uploadToYouTube(auth, videoFile) {
                     categoryId: '22', // Category 22 = People & Blogs
                 },
                 status: {
-                    privacyStatus: 'public', // Change to 'private' or 'unlisted' if needed
+                    privacyStatus: 'public',
                 },
             },
             part: 'snippet,status',
@@ -95,5 +92,3 @@ function uploadToYouTube(auth, videoFile) {
         }
     );
 }
-
-uploadVideo('test.mp4')
