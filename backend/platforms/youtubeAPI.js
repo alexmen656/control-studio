@@ -26,7 +26,7 @@ export async function authorize() {
     try {
         const content = await fs.readFile('credentials.json', 'utf-8');
         const { client_secret, client_id, redirect_uris } = JSON.parse(content);
-        const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+        const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, 'http://localhost:6709/api/oauth2callback/youtube');
 
         try {
             const token = await fs.readFile(TOKEN_PATH, 'utf-8');

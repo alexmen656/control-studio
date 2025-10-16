@@ -30,6 +30,10 @@ export default {
                 .then(response => {
                     //window.location.href = response.data.authUrl;
                     console.log('YouTube connection initiated');
+
+                    if (response.data.authUrl) {
+                        window.location.href = response.data.authUrl;
+                    }
                 })
                 .catch(error => {
                     console.error('Error connecting to YouTube:', error);

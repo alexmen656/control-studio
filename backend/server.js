@@ -337,6 +337,23 @@ app.post('/api/connect/:platform', async (req, res) => {
   }
 })
 
+app.get('/api/oauth2callback/youtube', async (req, res) => {
+  const { code } = req.query;
+
+  if (!code) {
+    return res.status(400).send('Authorization code not provided');
+  }
+
+  try {
+    await fs.promises.writeFile('token.json', JSON.stringify(code));
+    res.redirect('http://localhost:5185/accounts');
+    //res.send('YouTube authorization successful! You can close this tab.');
+  } catch (error) {
+    console.error('Error during YouTube OAuth2 callback:', error);
+    res.status(500).send('Error during YouTube authorization');
+  }
+});
+
 app.post('/instagram', async (req, res) => {
   try {
     res.status(200).send('Instagram integration coming soon!')
