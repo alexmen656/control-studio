@@ -5,6 +5,7 @@ import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
+import { uploadVideo, authorize } from './platforms/youtubeAPI.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -303,15 +304,20 @@ app.post('/api/videos/bulk-delete', (req, res) => {
   }
 })
 
-app.post('/api/connect/:platform', (req, res) => {
+app.post('/api/connect/:platform', async (req, res) => {
   try {
 
     const { platform } = req.params
 
     switch (platform) {
       case 'youtube':
-        res.json({ message: 'Connected to YouTube successfully' })
-        break;
+        const result = await authorize();
+
+        if (result.authUrl) {
+          return res.json({ authUrl: result.authUrl });
+        } else {
+          return res.json({ message: 'Connected to YouTube successfully' });
+        }
 
       case 'instagram':
         res.json({ message: 'Connected to Instagram successfully' })

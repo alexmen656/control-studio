@@ -1,7 +1,7 @@
 
 // stolen from my youtube bot project hehehehe
 
-import fs from 'fs';
+import fs from 'fs/promises';
 import { google } from 'googleapis';
 import readline from 'readline';
 
@@ -18,30 +18,44 @@ export function uploadVideo(videoFile) {
             console.error('Error loading credentials.json:', err);
             return;
         }
-        authorize(JSON.parse(content), (auth) => uploadToYouTube(auth, videoFile));
+        //   authorize(JSON.parse(content));//(auth) => uploadToYouTube(auth, videoFile)
     });
 }
 
-function authorize(credentials, callback) {
-    const { client_secret, client_id, redirect_uris } = credentials;
-    const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+export async function authorize() {
+    try {
+        const content = await fs.readFile('credentials.json', 'utf-8');
+        const { client_secret, client_id, redirect_uris } = JSON.parse(content);
+        const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
 
-    fs.readFile(TOKEN_PATH, (err, token) => {
-        if (err) {
-            return getNewToken(oAuth2Client, callback);
+        try {
+            const token = await fs.readFile(TOKEN_PATH, 'utf-8');
+            console.log('Token found');
+            oAuth2Client.setCredentials(JSON.parse(token));
+            return oAuth2Client;
+        } catch {
+            console.log('No token found, need to get a new one');
+            const authUrl = oAuth2Client.generateAuthUrl({
+                access_type: 'offline',
+                scope: SCOPES,
+            });
+            return { authUrl };
         }
-        oAuth2Client.setCredentials(JSON.parse(token));
-        callback(oAuth2Client);
-    });
+    } catch (err) {
+        console.error('Error loading credentials.json:', err);
+        throw err;
+    }
 }
 
-function getNewToken(oAuth2Client, callback) {
+
+function getNewToken(oAuth2Client) {//callback
     const authUrl = oAuth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: SCOPES,
     });
 
-    console.log('Authorize this app by visiting this URL:', authUrl);
+    return JSON.stringify({ 'authUrl': authUrl });
+    /*console.log('Authorize this app by visiting this URL:', authUrl);
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -59,7 +73,7 @@ function getNewToken(oAuth2Client, callback) {
             console.log('Token stored to', TOKEN_PATH);
             callback(oAuth2Client);
         });
-    });
+    });*/
 }
 
 function uploadToYouTube(auth, videoFile) {
