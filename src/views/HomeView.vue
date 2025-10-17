@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import TableHeader from '@/components/TableHeader.vue'
+import StatusFilter from '@/components/StatusFilter.vue'
+import HomeHeader from '@/components/HomeHeader.vue'
+
 const router = useRouter()
 
 const API_URL = 'http://localhost:6709/api'
@@ -302,23 +306,7 @@ const saveVideoDetails = async () => {
 <template>
   <div class="h-full flex flex-col bg-white dark:bg-gray-900">
     <div class="px-8 py-6 border-b border-gray-200 dark:border-gray-700">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Videos</h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Manage and upload your videos to multiple platforms
-          </p>
-        </div>
-        <button @click="showUploadModal = true"
-          class="flex items-center space-x-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd"
-              d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-              clip-rule="evenodd" />
-          </svg>
-          <span class="font-medium">Upload Videos</span>
-        </button>
-      </div>
+      <HomeHeader @open-upload-modal="showUploadModal = true" />
       <div class="flex flex-wrap items-center gap-4">
         <div class="flex-1 min-w-[200px] max-w-md">
           <div class="relative">
@@ -331,18 +319,7 @@ const saveVideoDetails = async () => {
               class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
           </div>
         </div>
-        <select v-model="filterStatus"
-          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500">
-          <option value="all">All Status</option>
-          <option value="awaiting-details">Awaiting Details</option>
-          <option value="ready">Ready</option>
-          <option value="uploading">Uploading</option>
-          <option value="processing">Processing</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="published">Published</option>
-          <option value="failed">Failed</option>
-        </select>
-
+        <StatusFilter v-model="filterStatus" />
         <div class="flex items-center gap-2 ml-auto">
           <div v-if="selectedVideos.size > 0"
             class="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
@@ -401,10 +378,19 @@ const saveVideoDetails = async () => {
         <div v-for="video in filteredVideos" :key="video.id"
           class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg border border-gray-200 dark:border-gray-700 transition-all overflow-hidden">
           <div class="relative aspect-video bg-gray-200 dark:bg-gray-700 overflow-hidden">
-            <img :src="video.thumbnail" :alt="video.title" class="w-full h-full object-cover" />
+            <video v-if="video.filename" class="w-full h-full object-cover" muted>
+              <source :src="`http://localhost:6709/uploads/${video.filename}`" type="video/mp4">
+            </video>
+            <div v-else class="w-full h-full flex items-center justify-center">
+              <svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                  clip-rule="evenodd" />
+              </svg>
+            </div>
             <div
               class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center">
-              <button
+              <button @click="router.push({ name: 'video', params: { id: video.id } })"
                 class="opacity-0 group-hover:opacity-100 bg-white text-gray-900 rounded-full p-3 shadow-lg hover:scale-110 transition-all">
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd"
@@ -417,12 +403,16 @@ const saveVideoDetails = async () => {
               {{ video.duration }}
             </div>
             <div class="absolute top-2 left-2">
-              <input type="checkbox" :checked="selectedVideos.has(video.id)" @change="toggleVideoSelection(video.id)"
-                class="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer" />
+              <label class="custom-checkbox">
+                <input type="checkbox" :checked="selectedVideos.has(video.id)"
+                  @change="toggleVideoSelection(video.id)" />
+                <span class="checkmark"></span>
+              </label>
             </div>
           </div>
           <div class="p-4">
-            <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2 truncate"
+            <h3
+              class="font-semibold text-gray-900 dark:text-gray-100 mb-2 truncate cursor-pointer hover:text-red-600 transition-colors"
               @click="router.push({ name: 'video', params: { id: video.id } })">{{ video.title }}</h3>
             <div class="flex items-center gap-2 mb-3">
               <span :class="['text-xs px-2 py-1 rounded-full font-medium', getStatusColor(video.status)]">
@@ -432,7 +422,7 @@ const saveVideoDetails = async () => {
                 👁 {{ formatViews(video.views) }}
               </span>
             </div>
-            <div v-if="video.progress !== undefined" class="mb-3">
+            <div v-if="video.status === 'uploading' && video.progress !== undefined" class="mb-3">
               <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                 <div class="bg-red-500 h-full transition-all" :style="{ width: `${video.progress}%` }">
                 </div>
@@ -466,61 +456,48 @@ const saveVideoDetails = async () => {
           <thead class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
             <tr>
               <th class="px-6 py-3 text-left">
-                <input type="checkbox" :checked="selectedVideos.size === filteredVideos.length"
-                  @change="selectAllVideos"
-                  class="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer" />
+                <label class="custom-checkbox">
+                  <input type="checkbox" :checked="selectedVideos.size === filteredVideos.length"
+                    @change="selectAllVideos" />
+                  <span class="checkmark"></span>
+                </label>
               </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Video
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Status
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Platforms
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Views
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Size
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Date
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Actions
-              </th>
+              <TableHeader />
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             <tr v-for="video in filteredVideos" :key="video.id"
               class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
               <td class="px-6 py-4">
-                <input type="checkbox" :checked="selectedVideos.has(video.id)" @change="toggleVideoSelection(video.id)"
-                  class="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer" />
+                <label class="custom-checkbox">
+                  <input type="checkbox" :checked="selectedVideos.has(video.id)"
+                    @change="toggleVideoSelection(video.id)" />
+                  <span class="checkmark"></span>
+                </label>
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
                   <div class="relative w-20 h-12 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0">
-                    <img :src="video.thumbnail" :alt="video.title" class="w-full h-full object-cover" />
+                    <video v-if="video.filename" class="w-full h-full object-cover" muted>
+                      <source :src="`http://localhost:6709/uploads/${video.filename}`" type="video/mp4">
+                    </video>
+                    <div v-else class="w-full h-full flex items-center justify-center">
+                      <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                          clip-rule="evenodd" />
+                      </svg>
+                    </div>
                     <div
                       class="absolute bottom-0 right-0 bg-black bg-opacity-75 text-white text-xs px-1 py-0.5 text-[10px]">
                       {{ video.duration }}
                     </div>
                   </div>
                   <div class="min-w-0">
-                    <div class="font-medium text-gray-900 dark:text-gray-100 truncate"
+                    <div class="font-medium text-gray-900 dark:text-gray-100 truncate cursor-pointer hover:text-red-600"
                       @click="router.push({ name: 'video', params: { id: video.id } })">{{
                         video.title }}</div>
-                    <div v-if="video.progress !== undefined" class="mt-1">
+                    <div v-if="video.status === 'uploading' && video.progress !== undefined" class="mt-1">
                       <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                         <div class="bg-red-500 h-full" :style="{ width: `${video.progress}%` }">
                         </div>
@@ -561,7 +538,8 @@ const saveVideoDetails = async () => {
                     </svg>
                     Add Details
                   </button>
-                  <button class="p-1.5 text-gray-400 hover:text-red-600 transition-colors" title="Edit">
+                  <button @click="openDetailsModal(video)"
+                    class="p-1.5 text-gray-400 hover:text-red-600 transition-colors" title="Edit">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -834,5 +812,67 @@ const saveVideoDetails = async () => {
   ::-webkit-scrollbar-thumb:hover {
     background: #718096;
   }
+}
+
+.custom-checkbox {
+  display: block;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  width: 20px;
+  height: 20px;
+}
+
+.custom-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  width: 0;
+  height: 0;
+}
+
+.custom-checkbox .checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: white;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .custom-checkbox .checkmark {
+    background-color: #374151;
+    border-color: #4b5563;
+  }
+}
+
+.custom-checkbox:hover input~.checkmark {
+  border-color: #ef4444;
+}
+
+.custom-checkbox input:checked~.checkmark {
+  background-color: #ef4444;
+  border-color: #ef4444;
+}
+
+.custom-checkbox .checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.custom-checkbox input:checked~.checkmark:after {
+  display: block;
 }
 </style>
