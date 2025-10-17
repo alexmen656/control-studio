@@ -148,6 +148,20 @@ app.post('/api/upload', upload.single('video'), (req, res) => {
   }
 })
 
+app.get('/api/accounts/status', (req, res) => {
+  try {
+    res.json({
+      youtube: fs.existsSync('token.json'),
+      tiktok: fs.existsSync('tiktok_token.json'),
+      instagram: false,
+      facebook: false
+    })
+  } catch (error) {
+    console.error('Error checking account status:', error)
+    res.status(500).json({ error: 'Error checking account status' })
+  }
+})
+
 app.post('/api/upload-multiple', upload.array('videos', 10), (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {

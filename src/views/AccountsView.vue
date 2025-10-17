@@ -205,6 +205,21 @@ const connectedAccounts = ref({
     facebook: false
 })
 
+const checkConnectedAccounts = () => {
+    axios.get(`${baseurl}accounts/status`)
+        .then(response => {
+            connectedAccounts.value.youtube = response.data.youtube || false
+            connectedAccounts.value.instagram = response.data.instagram || false
+            connectedAccounts.value.tiktok = response.data.tiktok || false
+            connectedAccounts.value.facebook = response.data.facebook || false
+        })
+        .catch(error => {
+            console.error('Error fetching connected accounts status:', error)
+        })
+}
+
+checkConnectedAccounts()
+
 const connectYouTube = () => {
     axios.post(`${baseurl}connect/youtube`)
         .then(response => {
