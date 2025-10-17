@@ -391,6 +391,40 @@ app.post('/instagram', async (req, res) => {
   }
 })
 
+app.post('/api/publish', async (req, res) => {
+  try {
+    if (!req.body.videoId) {
+      return res.status(400).send('videoId is required')
+    }
+
+    const data = readVideos()
+    const video = data.videos.find(v => v.id === req.body.videoId)
+
+    if (!video) {
+      return res.status(404).send('Video not found')
+    }
+
+    if (!video.platforms || video.platforms.length === 0) {
+      return res.status(400).send('No platforms selected for publishing')
+    }
+
+    if (video.platforms.includes('youtube')) {
+      console.log('here');
+      await uploadVideo(video)
+
+    }
+
+    if (video.platforms.includes('tiktok')) {
+      await tiktokAPI.uploadVideo(video.path, video.title)
+    }
+
+    res.status(200).send('Video successfully published to ' + video.platforms.join(', '))
+  } catch (error) {
+    console.error('Error publishing post:', error)
+    res.status(500).send('Error publishing post')
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`)
   console.log(`Uploads directory: ${uploadsDir}`)

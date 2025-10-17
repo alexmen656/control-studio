@@ -82,6 +82,23 @@ const loadVideo = async () => {
     }
 }
 
+const publishVideo = async () => {
+    if (!currentVideo.value) return
+
+    try {
+        const response = await axios.post(`${API_URL}/publish`, {
+            videoId: currentVideo.value.id,
+            platform: currentVideo.value.platforms
+        })
+
+        if (response.data) {
+            console.log('Video published successfully', response.data)
+        }
+    } catch (error) {
+        console.error('Error publishing video:', error)
+    }
+}
+
 const generateMockAnalytics = () => {
     if (!currentVideo.value) return
 
@@ -293,6 +310,11 @@ const averageEngagement = computed(() => {
                         </p>
                     </div>
                     <div class="flex items-center gap-3">
+                        <span v-if="currentVideo.status === 'ready'"
+                            class="px-4 py-2 rounded-full font-medium text-smbg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                            @click="publishVideo()">
+                            Publish
+                        </span>
                         <span
                             :class="['px-4 py-2 rounded-full font-medium text-sm', getStatusColor(currentVideo.status)]">
                             {{ currentVideo.status.charAt(0).toUpperCase() + currentVideo.status.slice(1).replace('-',
@@ -512,7 +534,7 @@ const averageEngagement = computed(() => {
                                         <div v-html="getPlatformIcon(platform)"></div>
                                     </div>
                                     <span class="font-medium text-gray-900 dark:text-gray-100 capitalize">{{ platform
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                             <p v-else class="text-sm text-gray-500 dark:text-gray-400">No platforms selected</p>
@@ -573,7 +595,7 @@ const averageEngagement = computed(() => {
                                     <div v-html="getPlatformIcon(platform)"></div>
                                 </div>
                                 <span class="font-medium text-gray-900 dark:text-gray-100 capitalize">{{ platform
-                                }}</span>
+                                    }}</span>
                                 <div v-if="selectedPlatforms.includes(platform as any)" class="ml-auto">
                                     <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd"
@@ -658,7 +680,7 @@ const averageEngagement = computed(() => {
                                     <div v-html="getPlatformIcon(platform)"></div>
                                 </div>
                                 <span class="font-medium text-gray-900 dark:text-gray-100 capitalize">{{ platform
-                                }}</span>
+                                    }}</span>
                                 <div v-if="videoDetailsForm.platforms.includes(platform as any)" class="ml-auto">
                                     <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd"

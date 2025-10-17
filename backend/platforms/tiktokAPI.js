@@ -163,7 +163,7 @@ export async function uploadVideo(videoPath, title, description, privacyLevel = 
         const tokenData = JSON.parse(await fs.readFile(TOKEN_PATH, 'utf-8'));
         const accessToken = tokenData.access_token;
 
-        let chunkSize = 8 * 1024 * 1024; // 4MB
+        let chunkSize = 128 * 1024 * 1024; // 4MB
         const fileStat = await fs.stat(videoPath);
         let fileSize = fileStat.size;
         if (fileSize < chunkSize) {
@@ -183,7 +183,7 @@ export async function uploadVideo(videoPath, title, description, privacyLevel = 
                 source: 'FILE_UPLOAD',
                 video_size: fileSize,
                 chunk_size: String(chunkSize),
-                //total_chunk_count: Math.ceil(fileSize / chunkSize)
+                total_chunk_count: Math.ceil(fileSize / chunkSize)
             }
         });
 
@@ -300,8 +300,8 @@ export async function getUserInfo() {
     }
 }
 
-uploadVideo('/Users/alexpolan/social-media-manager/backend/uploads/1760536394562-892602474.MP4', 'Test Video', 'This is a test video upload', 'SELF_ONLY').then(response => {
+/*uploadVideo('/Users/alexpolan/social-media-manager/backend/uploads/1760536394562-892602474.MP4', 'Test Video', 'This is a test video upload', 'SELF_ONLY').then(response => {
     console.log('Upload response:', response);
 }).catch(err => {
     console.error('Error uploading video:', err);
-});
+});*/

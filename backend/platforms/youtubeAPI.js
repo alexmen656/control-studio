@@ -4,6 +4,7 @@
 import fs from 'fs/promises';
 import { google } from 'googleapis';
 import readline from 'readline';
+import fs2 from 'fs';
 
 const SCOPES = ['https://www.googleapis.com/auth/youtube.upload'];
 const TOKEN_PATH = 'token.json';
@@ -12,19 +13,27 @@ const TOKEN_PATH = 'token.json';
  * Authorize the app and upload a video.
  * @param {string} videoFile - The path to the video file.
  */
-export function uploadVideo(videoFile) {
-    fs.readFile('credentials.json', (err, content) => {
-        if (err) {
-            console.error('Error loading credentials.json:', err);
-            return;
+export async function uploadVideo(videoFile) {
+    console.log('Starting upload process...');
+    try {
+        const auth = await authorize();
+
+        if (auth.authUrl) {
+            console.log('Authentication required. Visit:', auth.authUrl);
+            return { authUrl: auth.authUrl };
         }
-        //   authorize(JSON.parse(content));//(auth) => uploadToYouTube(auth, videoFile)
-    });
+
+        console.log('Credentials loaded, uploading video...');
+        return await uploadToYouTube(auth, videoFile);
+    } catch (err) {
+        console.error('Error during upload process:', err);
+        throw err;
+    }
 }
 
 export async function authorize() {
     try {
-        const content = await fs.readFile('credentials.json', 'utf-8');
+        const content = await fs.readFile('/Users/alexpolan/social-media-manager/backend/platforms/credentials.json', 'utf-8');
         const { client_secret, client_id, redirect_uris } = JSON.parse(content);
         const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, 'http://localhost:6709/api/oauth2callback/youtube');
 
@@ -76,33 +85,40 @@ function getNewToken(oAuth2Client) {//callback
     });*/
 }
 
-function uploadToYouTube(auth, videoFile) {
+async function uploadToYouTube(auth, videoFile) {
     const youtube = google.youtube({ version: 'v3', auth });
 
-    youtube.videos.insert(
-        {
-            resource: {
-                snippet: {
-                    title: 'My AI Reddit Story',
-                    description: 'Automatically uploaded by my bot!',
-                    tags: ['Reddit', 'Minecraft', 'AI Story'],
-                    categoryId: '22', // Category 22 = People & Blogs
+    //console.log('Reading video file into buffer... ', videoFile);
+    // const videoBuffer = await fs.readFile(videoFile.path);
+
+    return new Promise((resolve, reject) => {
+        youtube.videos.insert(
+            {
+                resource: {
+                    snippet: {
+                        title: 'My AI Reddit Story',
+                        description: 'Automatically uploaded by my bot!',
+                        tags: ['Reddit', 'Minecraft', 'AI Story'],
+                        categoryId: '22', // Category 22 = People & Blogs
+                    },
+                    status: {
+                        privacyStatus: 'public',
+                    },
                 },
-                status: {
-                    privacyStatus: 'public',
+                part: 'snippet,status',
+                media: {
+                    body: fs2.createReadStream(videoFile.path),
                 },
             },
-            part: 'snippet,status',
-            media: {
-                body: fs.createReadStream(videoFile),
-            },
-        },
-        (err, response) => {
-            if (err) {
-                console.error('YouTube API error:', err);
-                return;
+            (err, response) => {
+                if (err) {
+                    console.error('YouTube API error:', err);
+                    reject(err);
+                    return;
+                }
+                console.log('Video uploaded:', response.data);
+                resolve(response.data);
             }
-            console.log('Video uploaded:', response.data);
-        }
-    );
+        );
+    });
 }
