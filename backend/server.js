@@ -6,6 +6,7 @@ import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { uploadVideo, authorize, getTokenFromCode } from './platforms/youtubeAPI.js'
+import { InstagramAuth } from './platforms/OfficialInstagramAPI.js'
 import * as tiktokAPI from './platforms/tiktokAPI.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -153,7 +154,7 @@ app.get('/api/accounts/status', (req, res) => {
     res.json({
       youtube: fs.existsSync('token.json'),
       tiktok: fs.existsSync('tiktok_token.json'),
-      instagram: false,
+      instagram: fs.existsSync('instagram_token.json'),
       facebook: false
     })
   } catch (error) {
@@ -347,9 +348,12 @@ app.post('/api/connect/:platform', async (req, res) => {
         }
 
       case 'instagram':
-        res.json({ message: 'Connected to Instagram successfully' })
-        break;
-
+        const instagramAuth = InstagramAuth();
+        if (instagramAuth.auth_url) {
+          return res.json({ authUrl: instagramAuth.auth_url });
+        } else {
+          res.json({ message: 'Connected to Instagram successfully' });
+        }
       case 'tiktok':
         const tiktokResult = await tiktokAPI.authorize();
 
@@ -406,6 +410,26 @@ app.get('/api/oauth2callback/tiktok', async (req, res) => {
   } catch (error) {
     console.error('Error during TikTok OAuth2 callback:', error);
     res.redirect('http://localhost:5185/accounts?error=tiktok_auth_failed');
+  }
+});
+
+app.get('/api/oauth2callback/instagram', async (req, res) => {
+  const { code, state, error, error_description } = req.query;
+
+  if (error) {
+    console.error('Instagram OAuth error:', error, error_description);
+    return res.redirect(`http://localhost:5185/accounts?error=${error}`);
+  }
+  if (!code) {
+    return res.status(400).send('Authorization code not provided');
+  }
+
+  try {
+    await fs.promises.writeFile('instagram_code.json', JSON.stringify(code));
+    res.redirect('http://localhost:5185/accounts?instagram=connected');
+  } catch (error) {
+    console.error('Error during Instagram OAuth2 callback:', error);
+    res.redirect('http://localhost:5185/accounts?error=instagram_auth_failed');
   }
 });
 
