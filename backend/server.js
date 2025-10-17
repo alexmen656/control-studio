@@ -5,7 +5,7 @@ import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
-import { uploadVideo, authorize } from './platforms/youtubeAPI.js'
+import { uploadVideo, authorize, getTokenFromCode } from './platforms/youtubeAPI.js'
 import * as tiktokAPI from './platforms/tiktokAPI.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -377,7 +377,8 @@ app.get('/api/oauth2callback/youtube', async (req, res) => {
   }
 
   try {
-    await fs.promises.writeFile('token.json', JSON.stringify(code));
+    await fs.promises.writeFile('code.json', JSON.stringify(code));
+    await getTokenFromCode(code);
     res.redirect('http://localhost:5185/accounts');
     //res.send('YouTube authorization successful! You can close this tab.');
   } catch (error) {
