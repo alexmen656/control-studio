@@ -284,6 +284,18 @@ app.delete('/api/videos/:id', (req, res) => {
   }
 })
 
+app.get('/api/used-storage', (req, res) => {
+  try {
+    const data = readVideos()
+    const totalBytes = data.videos.reduce((acc, video) => acc + (video.sizeBytes || 0), 0)
+
+    res.json({ used_storage: totalBytes, total_storage: 5 * 1024 * 1024 * 1024 })
+  } catch (error) {
+    console.error('Error calculating used storage:', error)
+    res.status(500).json({ error: 'Error calculating used storage' })
+  }
+})
+
 app.post('/api/videos/bulk-delete', (req, res) => {
   try {
     const { videoIds } = req.body
