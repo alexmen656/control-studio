@@ -22,4 +22,17 @@ export function InstagramAuth() {
     return { auth_url: authUrl };
 }
 
+export function InstagramTokenExchange(code) {
+    const appId = process.env.IG_APP_ID;
+    const appSecret = process.env.IG_APP_SECRET;
+    const redirectUri = 'http://localhost:6709/api/oauth2callback/instagram';
+
+    let tokenUrl = 'https://graph.facebook.com/v14.0/oauth/access_token';
+    tokenUrl += '?client_id=' + encodeURIComponent(appId);
+    tokenUrl += '&redirect_uri=' + encodeURIComponent(redirectUri);
+    tokenUrl += '&client_secret=' + encodeURIComponent(appSecret);
+    tokenUrl += '&code=' + encodeURIComponent(code);
+    return tokenUrl;
+}
+
 //console.log(InstagramAuth());

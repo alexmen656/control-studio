@@ -4,9 +4,10 @@ import bodyParser from 'body-parser'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
+import axios from 'axios'
 import { fileURLToPath } from 'url'
 import { uploadVideo, authorize, getTokenFromCode } from './platforms/youtubeAPI.js'
-import { InstagramAuth } from './platforms/OfficialInstagramAPI.js'
+import { InstagramAuth, InstagramTokenExchange } from './platforms/OfficialInstagramAPI.js'
 import * as tiktokAPI from './platforms/tiktokAPI.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -426,10 +427,30 @@ app.get('/api/oauth2callback/instagram', async (req, res) => {
 
   try {
     await fs.promises.writeFile('instagram_code.json', JSON.stringify(code));
+    axios.get(InstagramTokenExchange(code)).then(response => {
+      fs.promises.writeFile('instagram_token.json', JSON.stringify(response.data));
+    });
+    //return res.redirect();
     res.redirect('http://localhost:5185/accounts?instagram=connected');
   } catch (error) {
     console.error('Error during Instagram OAuth2 callback:', error);
     res.redirect('http://localhost:5185/accounts?error=instagram_auth_failed');
+  }
+});
+
+app.get('/api/oauth2callback/instagram/2', async (req, res) => {
+  const { code } = req.query;
+  console.log('Received Instagram code for token exchange:', req.body);
+  if (!code) {
+    return res.status(400).send('Authorization code not provided');
+  }
+  try {
+    await fs.promises.writeFile('instagram_code_2.json', JSON.stringify(code));
+    res.redirect('http://localhost:5185/accounts?instagram=connected');
+  }
+  catch (error) {
+    console.error('Error during Instagram OAuth2 token exchange:', error);
+    res.redirect('http://localhost:5185/accounts?error=instagram_token_exchange_failed');
   }
 });
 
