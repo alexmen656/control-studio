@@ -516,7 +516,7 @@ app.post('/api/publish', async (req, res) => {
         caption: video.description,
       };
 
-      await uploadReel(videoFile, accessToken, instagramUserId, options)
+      await uploadReel({ path: videoFile }, accessToken, instagramUserId, options)
     }
 
     if (video.platforms.includes('facebook')) {
