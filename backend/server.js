@@ -165,8 +165,8 @@ app.get('/api/accounts/status', (req, res) => {
     res.json({
       youtube: fs.existsSync(path.join(TOKENS_DIR, 'youtube_token.json')),
       tiktok: fs.existsSync(path.join(TOKENS_DIR, 'tiktok_token.json')),
-      instagram: fs.existsSync(path.join(TOKENS_DIR, 'instagram_token.json')),
-      facebook: fs.existsSync(path.join(TOKENS_DIR, 'facebook_token.json'))
+      instagram: fs.existsSync(path.join(TOKENS_DIR, 'instagram_business_account.json')),
+      facebook: fs.existsSync(path.join(TOKENS_DIR, 'facebook_accounts.json'))
     })
   } catch (error) {
     console.error('Error checking account status:', error)
@@ -439,6 +439,7 @@ app.get('/api/oauth2callback/instagram', async (req, res) => {
     console.error('Instagram OAuth error:', error, error_description);
     return res.redirect(`http://localhost:5185/accounts?error=${error}`);
   }
+
   if (!code) {
     return res.status(400).send('Authorization code not provided');
   }
@@ -447,8 +448,18 @@ app.get('/api/oauth2callback/instagram', async (req, res) => {
     await fs.promises.writeFile(path.join(TOKENS_DIR, 'instagram_code.json'), JSON.stringify(code));
     axios.get(InstagramTokenExchange(code)).then(response => {
       fs.promises.writeFile(path.join(TOKENS_DIR, 'instagram_token.json'), JSON.stringify(response.data));
+
+      axios.get(`https://graph.facebook.com/v24.0/me/accounts?access_token=${response.data.access_token}`)
+        .then(response => {
+          fs.promises.writeFile(path.join(TOKENS_DIR, 'facebook_accounts_for_instagram.json'), JSON.stringify(response.data));
+
+          axios.get(`https://graph.facebook.com/v24.0/${response.data.data[0].id}?fields=instagram_business_account&access_token=${response.data.data[0].access_token}`)
+            .then(response => {
+              fs.promises.writeFile(path.join(TOKENS_DIR, 'instagram_business_account.json'), JSON.stringify(response.data));
+            });
+        });
     });
-    //return res.redirect();
+
     res.redirect('http://localhost:5185/accounts?instagram=connected');
   } catch (error) {
     console.error('Error during Instagram OAuth2 callback:', error);
@@ -463,6 +474,7 @@ app.get('/api/oauth2callback/facebook', async (req, res) => {
     console.error('Facebook OAuth error:', error, error_description);
     return res.redirect(`http://localhost:5185/accounts?error=${error}`);
   }
+
   if (!code) {
     return res.status(400).send('Authorization code not provided');
   }
@@ -471,8 +483,14 @@ app.get('/api/oauth2callback/facebook', async (req, res) => {
     await fs.promises.writeFile(path.join(TOKENS_DIR, 'facebook_code.json'), JSON.stringify(code));
     axios.get(FacebookTokenExchange(code)).then(response => {
       fs.promises.writeFile(path.join(TOKENS_DIR, 'facebook_token.json'), JSON.stringify(response.data));
+
+
+      axios.get(`https://graph.facebook.com/v24.0/me/accounts?access_token=${response.data.access_token}`)
+        .then(response => {
+          fs.promises.writeFile(path.join(TOKENS_DIR, 'facebook_accounts.json'), JSON.stringify(response.data));
+        });
     });
-    //return res.redirect();
+
     res.redirect('http://localhost:5185/accounts?facebook=connected');
   } catch (error) {
     console.error('Error during Facebook OAuth2 callback:', error);
