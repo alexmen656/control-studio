@@ -8,6 +8,8 @@ import axios from 'axios'
 import { fileURLToPath } from 'url'
 import { uploadVideo, authorize, getTokenFromCode } from './platforms/youtubeAPI.js'
 import { InstagramAuth, InstagramTokenExchange } from './platforms/OfficialInstagramAPI.js'
+import { FacebookAuth, FacebookTokenExchange } from './platforms/facebookAPI.js'
+
 import * as tiktokAPI from './platforms/tiktokAPI.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -156,7 +158,7 @@ app.get('/api/accounts/status', (req, res) => {
       youtube: fs.existsSync('token.json'),
       tiktok: fs.existsSync('tiktok_token.json'),
       instagram: fs.existsSync('instagram_token.json'),
-      facebook: false
+      facebook: fs.existsSync('facebook_token.json')
     })
   } catch (error) {
     console.error('Error checking account status:', error)
@@ -355,6 +357,14 @@ app.post('/api/connect/:platform', async (req, res) => {
         } else {
           res.json({ message: 'Connected to Instagram successfully' });
         }
+
+      case 'facebook':
+        const facebookAuth = FacebookAuth();
+        if (facebookAuth.auth_url) {
+          return res.json({ authUrl: facebookAuth.auth_url });
+        } else {
+          res.json({ message: 'Connected to Facebook successfully' });
+        }
       case 'tiktok':
         const tiktokResult = await tiktokAPI.authorize();
 
@@ -435,6 +445,30 @@ app.get('/api/oauth2callback/instagram', async (req, res) => {
   } catch (error) {
     console.error('Error during Instagram OAuth2 callback:', error);
     res.redirect('http://localhost:5185/accounts?error=instagram_auth_failed');
+  }
+});
+
+app.get('/api/oauth2callback/facebook', async (req, res) => {
+  const { code, state, error, error_description } = req.query;
+
+  if (error) {
+    console.error('Facebook OAuth error:', error, error_description);
+    return res.redirect(`http://localhost:5185/accounts?error=${error}`);
+  }
+  if (!code) {
+    return res.status(400).send('Authorization code not provided');
+  }
+
+  try {
+    await fs.promises.writeFile('facebook_code.json', JSON.stringify(code));
+    axios.get(FacebookTokenExchange(code)).then(response => {
+      fs.promises.writeFile('facebook_token.json', JSON.stringify(response.data));
+    });
+    //return res.redirect();
+    res.redirect('http://localhost:5185/accounts?facebook=connected');
+  } catch (error) {
+    console.error('Error during Facebook OAuth2 callback:', error);
+    res.redirect('http://localhost:5185/accounts?error=facebook_auth_failed');
   }
 });
 
