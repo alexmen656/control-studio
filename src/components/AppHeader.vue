@@ -46,7 +46,7 @@
                         class="p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
                         <BellIcon class="w-5 h-5" />
                     </button>
-                    <div class="relative">
+                    <!----<div class="relative">
                         <button @click="toggleUserMenu"
                             class="flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg px-3 py-2 transition-colors">
                             <div
@@ -78,7 +78,7 @@
                                 <span>Sign out</span>
                             </button>
                         </div>
-                    </div>
+                    </div>-->
                     <button @click="toggleMobileMenu"
                         class="md:hidden p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
                         <MenuIcon v-if="!mobileMenuOpen" class="w-6 h-6" />
