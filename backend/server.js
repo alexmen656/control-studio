@@ -481,6 +481,8 @@ app.get('/api/oauth2callback/facebook', async (req, res) => {
 });
 
 app.post('/api/publish', async (req, res) => {
+  const platformStatuses = {}
+
   try {
     if (!req.body.videoId) {
       return res.status(400).send('videoId is required')
@@ -499,12 +501,26 @@ app.post('/api/publish', async (req, res) => {
 
     if (video.platforms.includes('youtube')) {
       console.log('Publishing to YouTube:', video.title);
-      await uploadVideo(video)
+      try {
+        await uploadVideo(video)
+        platformStatuses.youtube = 'success'
+        console.log('✓ YouTube: Published successfully')
+      } catch (error) {
+        platformStatuses.youtube = 'failed'
+        console.error('✗ YouTube: Failed -', error.message)
+      }
     }
 
     if (video.platforms.includes('tiktok')) {
       console.log('Publishing to TikTok:', video.title);
-      await tiktokAPI.uploadVideo(video.path, video.title)
+      try {
+        await tiktokAPI.uploadVideo(video.path, video.title)
+        platformStatuses.tiktok = 'success'
+        console.log('✓ TikTok: Published successfully')
+      } catch (error) {
+        platformStatuses.tiktok = 'failed'
+        console.error('✗ TikTok: Failed -', error.message)
+      }
     }
 
     if (video.platforms.includes('instagram')) {
@@ -516,7 +532,14 @@ app.post('/api/publish', async (req, res) => {
         caption: video.description,
       };
 
-      await uploadReel({ path: videoFile }, accessToken, instagramUserId, options)
+      try {
+        await uploadReel({ path: videoFile }, accessToken, instagramUserId, options)
+        platformStatuses.instagram = 'success'
+        console.log('✓ Instagram: Published successfully')
+      } catch (error) {
+        platformStatuses.instagram = 'failed'
+        console.error('✗ Instagram: Failed -', error.message)
+      }
     }
 
     if (video.platforms.includes('facebook')) {
@@ -529,14 +552,64 @@ app.post('/api/publish', async (req, res) => {
         description: video.description,
       };
 
-      await uploadFacebookVideo({ path: videoFile }, facebookAccessToken, facebookPageId, options)
+      try {
+        await uploadFacebookVideo({ path: videoFile }, facebookAccessToken, facebookPageId, options)
+        platformStatuses.facebook = 'success'
+        console.log('✓ Facebook: Published successfully')
+      } catch (error) {
+        platformStatuses.facebook = 'failed'
+        console.error('✗ Facebook: Failed -', error.message)
+      }
     }
 
+    const updatedData = readVideos()
+    const videoIndex = updatedData.videos.findIndex(v => v.id === req.body.videoId)
 
-    res.status(200).send('Video successfully published to ' + video.platforms.join(', '))
+    if (videoIndex !== -1) {
+      updatedData.videos[videoIndex].publishStatus = platformStatuses
+      updatedData.videos[videoIndex].updatedAt = new Date().toISOString()
+
+      const allSuccess = Object.values(platformStatuses).every(status => status === 'success')
+      const anySuccess = Object.values(platformStatuses).some(status => status === 'success')
+
+      if (allSuccess) {
+        updatedData.videos[videoIndex].status = 'published'
+      } else if (anySuccess) {
+        updatedData.videos[videoIndex].status = 'partially-published'
+      } else {
+        updatedData.videos[videoIndex].status = 'failed'
+      }
+
+      writeVideos(updatedData)
+    }
+
+    const successPlatforms = Object.entries(platformStatuses)
+      .filter(([_, status]) => status === 'success')
+      .map(([platform, _]) => platform)
+
+    const failedPlatforms = Object.entries(platformStatuses)
+      .filter(([_, status]) => status === 'failed')
+      .map(([platform, _]) => platform)
+
+    let message = ''
+    if (successPlatforms.length > 0) {
+      message += `Successfully published to: ${successPlatforms.join(', ')}`
+    }
+    if (failedPlatforms.length > 0) {
+      if (message) message += '. '
+      message += `Failed to publish to: ${failedPlatforms.join(', ')}`
+    }
+
+    res.status(200).json({
+      message: message || 'Publishing completed',
+      platformStatuses: platformStatuses
+    })
   } catch (error) {
     console.error('Error publishing post:', error)
-    res.status(500).send('Error publishing post')
+    res.status(500).json({
+      error: 'Error publishing post',
+      platformStatuses: platformStatuses
+    })
   }
 })
 
