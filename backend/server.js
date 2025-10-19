@@ -6,11 +6,10 @@ import path from 'path'
 import fs from 'fs'
 import axios from 'axios'
 import { fileURLToPath } from 'url'
-import { uploadVideo, authorize, getTokenFromCode } from './platforms/youtubeAPI.js'
-import { InstagramAuth, InstagramTokenExchange } from './platforms/OfficialInstagramAPI.js'
-import { FacebookAuth, FacebookTokenExchange } from './platforms/facebookAPI.js'
-
-import * as tiktokAPI from './platforms/tiktokAPI.js'
+import { uploadVideo, authorize, getTokenFromCode } from './platforms/YoutubeAPI.js'
+import { InstagramAuth, InstagramTokenExchange } from './platforms/InstagramAPI.js'
+import { FacebookAuth, FacebookTokenExchange } from './platforms/FacebookAPI.js'
+import * as tiktokAPI from './platforms/TiktokAPI.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

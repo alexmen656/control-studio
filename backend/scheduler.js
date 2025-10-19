@@ -3,10 +3,10 @@ import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-import { uploadVideo } from './platforms/youtubeAPI.js'
-import { uploadReel } from './platforms/OfficialInstagramAPI.js'
-import * as tiktokAPI from './platforms/tiktokAPI.js'
-import { uploadVideo as uploadFacebookVideo } from './platforms/facebookAPI.js'
+import { uploadVideo } from './platforms/YoutubeAPI.js'
+import { uploadReel } from './platforms/InstagramAPI.js'
+import * as tiktokAPI from './platforms/TiktokAPI.js'
+import { uploadVideo as uploadFacebookVideo } from './platforms/FacebookAPI.js'
 
 async function getScheduledVideos() {
     console.log('Fetching scheduled videos...');
