@@ -20,7 +20,6 @@ export function FacebookAuth() {
     authUrl += '?client_id=' + encodeURIComponent(appId);
     authUrl += '&redirect_uri=' + encodeURIComponent(redirectUri);
     authUrl += '&scope=' + encodeURIComponent(scope);
-    //authUrl += '&state=' + encodeURIComponent(state);
 
     return { auth_url: authUrl };
 }
@@ -46,11 +45,9 @@ export async function uploadVideo(videoFile, accessToken, pageId, options = {}) 
     try {
         const { uploadSessionId, startOffset } = await initializeUpload(videoFile, accessToken, pageId, options);
         await uploadVideoChunks(videoFile, uploadSessionId, startOffset, accessToken, pageId);
-        //const publishedVideo = await finishUpload(uploadSessionId, accessToken, pageId, options);
-
         const publishedVideo = await finishUpload(uploadSessionId, accessToken, pageId, options);
 
-        //return publishedVideo;
+        return publishedVideo;
     } catch (err) {
         console.error('Error during Facebook video upload:', err);
         throw err;
@@ -72,62 +69,18 @@ async function initializeUpload(videoFile, accessToken, pageId, options) {
     };
 
     try {
-        //ts is failinng, ts works again
         const response = await axios.post(url, null, { params });
-        //    const response = { data: { upload_session_id: '12345', start_offset: 0, end_offset: 100 } };
-        console.log('Upload session created:', response.data.upload_session_id);
-        console.log('Start offset:', response.data.start_offset);
-        console.log('End offset:', response.data.end_offset);
+        console.log('Upload session created:', response.data.upload_session_id, 'Start Offset:', response.data.start_offset, 'End Offset:', response.data.end_offset);
         return {
             uploadSessionId: response.data.upload_session_id,
             startOffset: response.data.start_offset
         };
 
     } catch (error) {
-        //console.error('Error initializing upload:', error.response.data || error.message);
-        console.error('Error initializing upload:');
+        console.error('Error initializing upload:', error.response.data || error.message);
         throw error;
     }
 }
-
-/*async function uploadVideoChunks(videoFile, uploadSessionId, startOffset, accessToken, pageId) {
-    const apiVersion = 'v21.0';
-    const url = `https://graph.facebook.com/${apiVersion}/${pageId}/videos`;
-
-    try {
-        // setTimeout(async () => {
-        console.log('Uploading video chunk at offset:', startOffset);
-        const fileBuffer = await fs.readFile(videoFile.path);
-        const stats = await fs.stat(videoFile.path);
-        const fileSize = stats.size;
-
-        const response = /*{ data: {} } *await axios.post(url, null, {
-            params: {
-                upload_phase: 'transfer',
-                upload_session_id: uploadSessionId,
-                start_offset: startOffset,
-                access_token: accessToken,
-                video_file_chunk: fileBuffer.toString('base64')
-            }
-        });
-
-        console.log('Video chunks uploaded successfully:', response.data);
-        return response.data;
-        // }, 8000);
-    } catch (error) {
-        //console.error('Error uploading video chunks:', error.response.data || error.message);
-        //console.error('Error uploading video chunks:');
-
-        if (error.response?.data) {
-            //console.error(JSON.stringify(error.response.data, null, 2));
-        } else {
-            // console.error(error.message);
-        }
-
-
-        throw error;
-    }
-}*/
 
 async function uploadVideoChunks(videoFile, uploadSessionId, startOffset, accessToken, pageId) {
     const apiVersion = 'v21.0';
@@ -199,9 +152,6 @@ async function finishUpload(uploadSessionId, accessToken, pageId, options) {
         console.log('Video published successfully with ID:', response.data.id);
         return response.data;
     } catch (error) {
-        //console.error('Error finishing upload:', error.response.data || error.message);
-        //console.error('Error finishing upload:');
-
         if (error.response?.data) {
             console.error(JSON.stringify(error.response.data, null, 2));
         } else {
@@ -250,5 +200,3 @@ export async function getVideos(pageId, accessToken, limit = 25) {
         throw error;
     }
 }
-
-//console.log(FacebookAuth());
