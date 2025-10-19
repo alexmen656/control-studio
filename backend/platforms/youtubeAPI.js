@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import { google } from 'googleapis';
-import readline from 'readline';
 import fs2 from 'fs';
 
 const SCOPES = ['https://www.googleapis.com/auth/youtube.upload'];

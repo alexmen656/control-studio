@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import fs from 'fs/promises';
-import fs2 from 'fs';
 import axios from 'axios';
 
 dotenv.config({ path: '.env' })
