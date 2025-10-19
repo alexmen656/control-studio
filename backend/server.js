@@ -475,31 +475,6 @@ app.get('/api/oauth2callback/facebook', async (req, res) => {
   }
 });
 
-app.get('/api/oauth2callback/instagram/2', async (req, res) => {
-  const { code } = req.query;
-  console.log('Received Instagram code for token exchange:', req.body);
-  if (!code) {
-    return res.status(400).send('Authorization code not provided');
-  }
-  try {
-    await fs.promises.writeFile(path.join(__dirname, 'instagram_code_2.json'), JSON.stringify(code));
-    res.redirect('http://localhost:5185/accounts?instagram=connected');
-  }
-  catch (error) {
-    console.error('Error during Instagram OAuth2 token exchange:', error);
-    res.redirect('http://localhost:5185/accounts?error=instagram_token_exchange_failed');
-  }
-});
-
-app.post('/instagram', async (req, res) => {
-  try {
-    res.status(200).send('Instagram integration coming soon!')
-  } catch (error) {
-    console.error('Error publishing Instagram post:', error)
-    res.status(500).send('Error publishing Instagram post')
-  }
-})
-
 app.post('/api/publish', async (req, res) => {
   try {
     if (!req.body.videoId) {
