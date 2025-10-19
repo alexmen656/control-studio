@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.join(__dirname, '..');
+const TOKENS_DIR = path.join(__dirname, '..', 'tokens');
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
 dotenv.config({ path: path.join(PROJECT_ROOT, '.env') })
@@ -44,10 +44,19 @@ export function InstagramTokenExchange(code) {
     return tokenUrl;
 }
 
-export async function uploadReel(videoFile, accessToken, instagramUserId, options = {}) {
+export async function uploadReel(videoFile, options = {}) {
     console.log('Starting Instagram Reel upload process...');
 
     try {
+        const instagramAccountPath = path.join(TOKENS_DIR, 'instagram_business_account.json');
+        const facebookAccountsPath = path.join(TOKENS_DIR, 'facebook_accounts_for_instagram.json');
+        const instagramAccountData = JSON.parse(await fs.readFile(instagramAccountPath, 'utf-8'));
+        const facebookAccountsData = JSON.parse(await fs.readFile(facebookAccountsPath, 'utf-8'));
+        const instagramUserId = instagramAccountData.instagram_business_account.id;
+        const accessToken = facebookAccountsData.data[0].access_token;
+
+        console.log('Using Instagram Business Account ID:', instagramUserId);
+
         const containerId = await createReelContainer(accessToken, instagramUserId, options);
 
         await uploadVideoToContainer(videoFile, containerId, accessToken);
@@ -179,11 +188,19 @@ async function publishContainer(containerId, accessToken, instagramUserId) {
     }
 }
 
-export async function checkPublishingLimit(accessToken, instagramUserId) {
+export async function checkPublishingLimit() {
     const apiVersion = 'v21.0';
-    const url = `https://graph.facebook.com/${apiVersion}/${instagramUserId}/content_publishing_limit`;
 
     try {
+        const instagramAccountPath = path.join(TOKENS_DIR, 'instagram_business_account.json');
+        const facebookAccountsPath = path.join(TOKENS_DIR, 'facebook_accounts_for_instagram.json');
+        const instagramAccountData = JSON.parse(await fs.readFile(instagramAccountPath, 'utf-8'));
+        const facebookAccountsData = JSON.parse(await fs.readFile(facebookAccountsPath, 'utf-8'));
+        const instagramUserId = instagramAccountData.instagram_business_account.id;
+        const accessToken = facebookAccountsData.data[0].access_token;
+
+        const url = `https://graph.facebook.com/${apiVersion}/${instagramUserId}/content_publishing_limit`;
+
         const response = await axios.get(url, {
             params: {
                 fields: 'quota_usage,config',

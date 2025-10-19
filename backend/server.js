@@ -544,14 +544,12 @@ app.post('/api/publish', async (req, res) => {
     if (video.platforms.includes('instagram')) {
       console.log('Publishing to Instagram:', video.title)
       const videoFile = video.path;
-      const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
-      const instagramUserId = process.env.INSTAGRAM_USER_ID;
       const options = {
         caption: video.description,
       };
 
       try {
-        await uploadReel({ path: videoFile }, accessToken, instagramUserId, options)
+        await uploadReel({ path: videoFile }, options)
         platformStatuses.instagram = 'success'
         console.log('✓ Instagram: Published successfully')
       } catch (error) {
@@ -563,15 +561,13 @@ app.post('/api/publish', async (req, res) => {
     if (video.platforms.includes('facebook')) {
       console.log('Publishing to Facebook:', video.title)
       const videoFile = video.path;
-      const facebookAccessToken = process.env.FACEBOOK_ACCESS_TOKEN;
-      const facebookPageId = process.env.FACEBOOK_PAGE_ID;
       const options = {
         title: video.title,
         description: video.description,
       };
 
       try {
-        await uploadFacebookVideo({ path: videoFile }, facebookAccessToken, facebookPageId, options)
+        await uploadFacebookVideo({ path: videoFile }, options)
         platformStatuses.facebook = 'success'
         console.log('✓ Facebook: Published successfully')
       } catch (error) {

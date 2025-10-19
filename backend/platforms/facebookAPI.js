@@ -2,6 +2,12 @@ import dotenv from 'dotenv';
 import fs from 'fs/promises';
 import axios from 'axios';
 import FormData from 'form-data';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const TOKENS_DIR = path.join(__dirname, '..', 'tokens');
 
 dotenv.config({ path: '.env' })
 
@@ -37,12 +43,18 @@ export function FacebookTokenExchange(code) {
     return tokenUrl;
 }
 
-export async function uploadVideo(videoFile, accessToken, pageId, options = {}) {
+export async function uploadVideo(videoFile, options = {}) {
     console.log('Starting Facebook Video upload process...');
-    console.log('Page ID:', pageId);
-    console.log('Video file:', videoFile);
 
     try {
+        const facebookAccountsPath = path.join(TOKENS_DIR, 'facebook_accounts.json');
+        const facebookAccountsData = JSON.parse(await fs.readFile(facebookAccountsPath, 'utf-8'));
+        const accessToken = facebookAccountsData.data[0].access_token;
+        const pageId = facebookAccountsData.data[0].id;
+
+        console.log('Using Facebook Page ID:', pageId);
+        console.log('Video file:', videoFile);
+
         const { uploadSessionId, startOffset } = await initializeUpload(videoFile, accessToken, pageId, options);
         await uploadVideoChunks(videoFile, uploadSessionId, startOffset, accessToken, pageId);
         const publishedVideo = await finishUpload(uploadSessionId, accessToken, pageId, options);
@@ -180,11 +192,17 @@ export async function getPages(accessToken) {
     }
 }
 
-export async function getVideos(pageId, accessToken, limit = 25) {
+export async function getVideos(limit = 25) {
     const apiVersion = 'v21.0';
-    const url = `https://graph.facebook.com/${apiVersion}/${pageId}/videos`;
 
     try {
+        const facebookAccountsPath = path.join(TOKENS_DIR, 'facebook_accounts.json');
+        const facebookAccountsData = JSON.parse(await fs.readFile(facebookAccountsPath, 'utf-8'));
+        const accessToken = facebookAccountsData.data[0].access_token;
+        const pageId = facebookAccountsData.data[0].id;
+
+        const url = `https://graph.facebook.com/${apiVersion}/${pageId}/videos`;
+
         const response = await axios.get(url, {
             params: {
                 fields: 'id,title,description,created_time,length,permalink_url',
