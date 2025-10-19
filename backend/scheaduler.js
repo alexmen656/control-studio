@@ -6,7 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 import { uploadVideo } from './platforms/youtubeAPI.js'
 import { uploadReel } from './platforms/OfficialInstagramAPI.js'
 import * as tiktokAPI from './platforms/tiktokAPI.js'
-
+import { uploadVideo as uploadFacebookVideo } from './platforms/facebookAPI.js'
 
 async function getScheduledVideos() {
     console.log('Fetching scheduled videos...');
@@ -64,6 +64,19 @@ async function publishVideo(video) {
             await uploadReel(videoFile, accessToken, instagramUserId, options)
         }
 
+        if (video.platforms.includes('facebook')) {
+            console.log('Publishing to Facebook:', video.title)
+            const videoFile = video.path;
+            const facebookAccessToken = process.env.FACEBOOK_ACCESS_TOKEN;
+            const facebookPageId = process.env.FACEBOOK_PAGE_ID;
+            const options = {
+                title: video.title,
+                description: video.description,
+            };
+
+            await uploadFacebookVideo({ path: videoFile }, facebookAccessToken, facebookPageId, options)
+        }
+
         console.log('Video successfully published to ' + video.platforms.join(', '))
     } catch (error) {
         console.error('Error publishing post:', error)
@@ -88,4 +101,6 @@ async function publishVideo(video) {
     });
 })();
 
-uploadReel({ path: '/Users/alexpolan/social-media-manager/backend/uploads/1760506481796-105686547.MP4' }, process.env.INSTAGRAM_ACCESS_TOKEN, process.env.INSTAGRAM_USER_ID, { caption: 'Test reel upload' });
+//uploadReel({ path: '/Users/alexpolan/social-media-manager/backend/uploads/1760506481796-105686547.MP4' }, process.env.INSTAGRAM_ACCESS_TOKEN, process.env.INSTAGRAM_USER_ID, { caption: 'Test reel upload' });
+
+uploadFacebookVideo({ path: '/Users/alexpolan/social-media-manager/backend/uploads/1760506481796-105686547.MP4' }, process.env.FACEBOOK_ACCESS_TOKEN, process.env.FACEBOOK_PAGE_ID, { title: 'Test video upload', description: 'This is a test video upload to Facebook via API' });
