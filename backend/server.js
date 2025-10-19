@@ -8,8 +8,8 @@ import axios from 'axios'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
 import { uploadVideo, authorize, getTokenFromCode } from './platforms/YoutubeAPI.js'
-import { InstagramAuth, InstagramTokenExchange } from './platforms/InstagramAPI.js'
-import { FacebookAuth, FacebookTokenExchange } from './platforms/FacebookAPI.js'
+import { InstagramAuth, InstagramTokenExchange, uploadReel } from './platforms/InstagramAPI.js'
+import { FacebookAuth, FacebookTokenExchange, uploadVideo as uploadFacebookVideo } from './platforms/FacebookAPI.js'
 import * as tiktokAPI from './platforms/TiktokAPI.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -493,14 +493,40 @@ app.post('/api/publish', async (req, res) => {
     }
 
     if (video.platforms.includes('youtube')) {
-      console.log('here');
+      console.log('Publishing to YouTube:', video.title);
       await uploadVideo(video)
-
     }
 
     if (video.platforms.includes('tiktok')) {
+      console.log('Publishing to TikTok:', video.title);
       await tiktokAPI.uploadVideo(video.path, video.title)
     }
+
+    if (video.platforms.includes('instagram')) {
+      console.log('Publishing to Instagram:', video.title)
+      const videoFile = video.path;
+      const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
+      const instagramUserId = process.env.INSTAGRAM_USER_ID;
+      const options = {
+        caption: video.description,
+      };
+
+      await uploadReel(videoFile, accessToken, instagramUserId, options)
+    }
+
+    if (video.platforms.includes('facebook')) {
+      console.log('Publishing to Facebook:', video.title)
+      const videoFile = video.path;
+      const facebookAccessToken = process.env.FACEBOOK_ACCESS_TOKEN;
+      const facebookPageId = process.env.FACEBOOK_PAGE_ID;
+      const options = {
+        title: video.title,
+        description: video.description,
+      };
+
+      await uploadFacebookVideo({ path: videoFile }, facebookAccessToken, facebookPageId, options)
+    }
+
 
     res.status(200).send('Video successfully published to ' + video.platforms.join(', '))
   } catch (error) {
