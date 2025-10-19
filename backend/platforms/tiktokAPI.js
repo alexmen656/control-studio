@@ -179,7 +179,6 @@ export async function uploadVideo(videoPath, title, description, privacyLevel = 
         console.log({
             video: {
                 title: title,
-                //description: description,
                 privacy_level: privacyLevel,
                 disable_duet: false,
                 disable_comment: false,
@@ -306,9 +305,3 @@ export async function getUserInfo() {
 
     }
 }
-
-/*uploadVideo('/Users/alexpolan/social-media-manager/backend/uploads/1760536394562-892602474.MP4', 'Test Video', 'This is a test video upload', 'SELF_ONLY').then(response => {
-    console.log('Upload response:', response);
-}).catch(err => {
-    console.error('Error uploading video:', err);
-});*/

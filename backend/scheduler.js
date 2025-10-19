@@ -35,9 +35,6 @@ async function publishVideo(video) {
             throw new Error('videoId is required')
         }
 
-        //const data = readVideos()
-        //onst video = data.videos.find(v => v.id === video.id)
-
         if (!video) {
             throw new Error('Video not found')
         }
@@ -91,7 +88,7 @@ async function publishVideo(video) {
 
 (async () => {
     const videos = await getScheduledVideos();
-    //console.log(videos);
+
     videos.forEach(async video => {
         const delay = new Date(video.scheduledDate) - new Date();
         if (delay > 0) {
@@ -104,7 +101,3 @@ async function publishVideo(video) {
         }
     });
 })();
-
-//uploadReel({ path: '/Users/alexpolan/social-media-manager/backend/uploads/1760506481796-105686547.MP4' }, process.env.INSTAGRAM_ACCESS_TOKEN, process.env.INSTAGRAM_USER_ID, { caption: 'Test reel upload' });
-
-uploadFacebookVideo({ path: '/Users/alexpolan/social-media-manager/backend/uploads/1760506481796-105686547.MP4' }, process.env.FACEBOOK_ACCESS_TOKEN, process.env.FACEBOOK_PAGE_ID, { title: 'Test video upload', description: 'This is a test video upload to Facebook via API' });

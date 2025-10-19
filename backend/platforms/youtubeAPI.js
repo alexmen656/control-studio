@@ -56,14 +56,14 @@ export async function authorize() {
 }
 
 
-function getNewToken(oAuth2Client) {
+/*function getNewToken(oAuth2Client) {
     const authUrl = oAuth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: SCOPES,
     });
 
     return JSON.stringify({ 'authUrl': authUrl });
-}
+}*/
 
 export async function getTokenFromCode(code) {
     const content = await fs.readFile(CREDENTIALS_PATH, 'utf-8');

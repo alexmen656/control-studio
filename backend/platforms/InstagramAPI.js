@@ -27,7 +27,6 @@ export function InstagramAuth() {
     authUrl += '?client_id=' + encodeURIComponent(appId);
     authUrl += '&redirect_uri=' + encodeURIComponent(redirectUri);
     authUrl += '&scope=' + encodeURIComponent(scope);
-    //authUrl += '&state=' + encodeURIComponent(state);
 
     return { auth_url: authUrl };
 }
@@ -49,7 +48,7 @@ export async function uploadReel(videoFile, accessToken, instagramUserId, option
     console.log('Starting Instagram Reel upload process...');
 
     try {
-        const containerId = await createReelContainer(videoFile, accessToken, instagramUserId, options);
+        const containerId = await createReelContainer(accessToken, instagramUserId, options);
 
         await uploadVideoToContainer(videoFile, containerId, accessToken);
         await waitForContainerReady(containerId, accessToken);
@@ -62,7 +61,7 @@ export async function uploadReel(videoFile, accessToken, instagramUserId, option
     }
 }
 
-async function createReelContainer(videoFile, accessToken, instagramUserId, options) {
+async function createReelContainer(accessToken, instagramUserId, options) {
     const apiVersion = 'v21.0';
     const url = `https://graph.facebook.com/${apiVersion}/${instagramUserId}/media`;
 
@@ -199,5 +198,3 @@ export async function checkPublishingLimit(accessToken, instagramUserId) {
         throw error;
     }
 }
-
-//console.log(InstagramAuth());
