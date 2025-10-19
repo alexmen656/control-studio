@@ -9,7 +9,7 @@
                             Control Studio</span>
                     </div>
                 </div>
-                <div class="hidden md:flex flex-1 max-w-2xl mx-8">
+                <!--- <div class="hidden md:flex flex-1 max-w-2xl mx-8">
                     <div class="relative w-full search-container">
                         <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 dark:text-gray-500"
                             viewBox="0 0 20 20" fill="currentColor">
@@ -23,7 +23,7 @@
 
                     </div>
                 </div>
-                <!---
+               
                 <nav class="hidden md:flex space-x-6">
                     <RouterLink to="/dashboard"
                         class="text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
