@@ -6,12 +6,13 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.join(__dirname, '..');
+const BACKEND_DIR = path.join(__dirname, '..');
+const TOKENS_DIR = path.join(BACKEND_DIR, 'tokens');
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
 dotenv.config({ path: path.join(PROJECT_ROOT, '.env') })
 
-const TOKEN_PATH = path.join(ROOT_DIR, 'tiktok_token.json');
+const TOKEN_PATH = path.join(TOKENS_DIR, 'tiktok_token.json');
 const TIKTOK_CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY || '';
 const TIKTOK_CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET || '';
 const REDIRECT_URI = 'https://alex.polan.sk/tiktok_redirect.php';
@@ -50,7 +51,7 @@ export async function authorize() {
         const codeChallenge = generateCodeChallenge(codeVerifier);
         const csrfState = crypto.randomBytes(16).toString('hex');
 
-        await fs.writeFile(path.join(ROOT_DIR, 'tiktok_oauth_state.json'), JSON.stringify({
+        await fs.writeFile(path.join(TOKENS_DIR, 'tiktok_oauth_state.json'), JSON.stringify({
             code_verifier: codeVerifier,
             csrf_state: csrfState
         }));
@@ -73,7 +74,7 @@ export async function authorize() {
 
 export async function exchangeCodeForToken(code, state) {
     try {
-        const oauthState = JSON.parse(await fs.readFile(path.join(ROOT_DIR, 'tiktok_oauth_state.json'), 'utf-8'));
+        const oauthState = JSON.parse(await fs.readFile(path.join(TOKENS_DIR, 'tiktok_oauth_state.json'), 'utf-8'));
 
         if (state !== oauthState.csrf_state) {
             throw new Error('State mismatch - possible CSRF attack');
@@ -111,7 +112,7 @@ export async function exchangeCodeForToken(code, state) {
         await fs.writeFile(TOKEN_PATH, JSON.stringify(tokenWithExpiry, null, 2));
         console.log('TikTok token stored successfully');
 
-        await fs.unlink(path.join(ROOT_DIR, 'tiktok_oauth_state.json')).catch(() => { });
+        await fs.unlink(path.join(TOKENS_DIR, 'tiktok_oauth_state.json')).catch(() => { });
 
         return tokenWithExpiry;
     } catch (err) {
@@ -168,30 +169,17 @@ export async function refreshAccessToken() {
 export async function uploadVideo(videoPath, title, description, privacyLevel = 'SELF_ONLY') {
     try {
         const tokenData = JSON.parse(await fs.readFile(TOKEN_PATH, 'utf-8'));
+        console.log('Using access token:', tokenData);
         const accessToken = tokenData.access_token;
+        console.log('Access Token:', accessToken);
 
         let chunkSize = 128 * 1024 * 1024; // 4MB
         const fileStat = await fs.stat(videoPath);
         let fileSize = fileStat.size;
+
         if (fileSize < chunkSize) {
             chunkSize = fileSize;
         }
-        console.log({
-            video: {
-                title: title,
-                privacy_level: privacyLevel,
-                disable_duet: false,
-                disable_comment: false,
-                disable_stitch: false,
-                video_cover_timestamp_ms: 1000
-            },
-            source_info: {
-                source: 'FILE_UPLOAD',
-                video_size: fileSize,
-                chunk_size: String(chunkSize),
-                total_chunk_count: Math.ceil(fileSize / chunkSize)
-            }
-        });
 
         console.log(`Uploading video of size ${fileSize} bytes in chunks of ${chunkSize} bytes`, String(Math.ceil(fileSize / chunkSize)));
         const initResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {

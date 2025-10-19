@@ -30,11 +30,4 @@ coverage
 *.tsbuildinfo
 .env
 
-credentials.json
-code.json
-facebook_token.json
-instagram_token.json
-instagram_code.json
-facebook_code.json
-token.json
-tiktok_token.json
+backend/tokens/*
