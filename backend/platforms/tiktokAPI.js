@@ -1,10 +1,17 @@
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config({ path: '.env' })
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT_DIR = path.join(__dirname, '..');
+const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
-const TOKEN_PATH = 'tiktok_token.json';
+dotenv.config({ path: path.join(PROJECT_ROOT, '.env') })
+
+const TOKEN_PATH = path.join(ROOT_DIR, 'tiktok_token.json');
 const TIKTOK_CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY || '';
 const TIKTOK_CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET || '';
 const REDIRECT_URI = 'https://alex.polan.sk/tiktok_redirect.php';
@@ -43,7 +50,7 @@ export async function authorize() {
         const codeChallenge = generateCodeChallenge(codeVerifier);
         const csrfState = crypto.randomBytes(16).toString('hex');
 
-        await fs.writeFile('tiktok_oauth_state.json', JSON.stringify({
+        await fs.writeFile(path.join(ROOT_DIR, 'tiktok_oauth_state.json'), JSON.stringify({
             code_verifier: codeVerifier,
             csrf_state: csrfState
         }));
@@ -66,7 +73,7 @@ export async function authorize() {
 
 export async function exchangeCodeForToken(code, state) {
     try {
-        const oauthState = JSON.parse(await fs.readFile('tiktok_oauth_state.json', 'utf-8'));
+        const oauthState = JSON.parse(await fs.readFile(path.join(ROOT_DIR, 'tiktok_oauth_state.json'), 'utf-8'));
 
         if (state !== oauthState.csrf_state) {
             throw new Error('State mismatch - possible CSRF attack');
@@ -104,7 +111,7 @@ export async function exchangeCodeForToken(code, state) {
         await fs.writeFile(TOKEN_PATH, JSON.stringify(tokenWithExpiry, null, 2));
         console.log('TikTok token stored successfully');
 
-        await fs.unlink('tiktok_oauth_state.json').catch(() => { });
+        await fs.unlink(path.join(ROOT_DIR, 'tiktok_oauth_state.json')).catch(() => { });
 
         return tokenWithExpiry;
     } catch (err) {

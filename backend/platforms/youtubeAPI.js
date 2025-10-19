@@ -1,9 +1,16 @@
 import fs from 'fs/promises';
 import { google } from 'googleapis';
 import fs2 from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT_DIR = path.join(__dirname, '..');
 
 const SCOPES = ['https://www.googleapis.com/auth/youtube.upload'];
-const TOKEN_PATH = 'token.json';
+const TOKEN_PATH = path.join(ROOT_DIR, 'token.json');
+const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
 
 export async function uploadVideo(videoFile) {
     console.log('Starting upload process...');
@@ -25,7 +32,7 @@ export async function uploadVideo(videoFile) {
 
 export async function authorize() {
     try {
-        const content = await fs.readFile('/Users/alexpolan/social-media-manager/backend/platforms/credentials.json', 'utf-8');
+        const content = await fs.readFile(CREDENTIALS_PATH, 'utf-8');
         const { client_secret, client_id, redirect_uris } = JSON.parse(content);
         const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, 'http://localhost:6709/api/oauth2callback/youtube');
 
@@ -59,7 +66,7 @@ function getNewToken(oAuth2Client) {
 }
 
 export async function getTokenFromCode(code) {
-    const content = await fs.readFile('/Users/alexpolan/social-media-manager/backend/platforms/credentials.json', 'utf-8');
+    const content = await fs.readFile(CREDENTIALS_PATH, 'utf-8');
     const { client_secret, client_id, redirect_uris } = JSON.parse(content);
     const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, 'http://localhost:6709/api/oauth2callback/youtube');
 

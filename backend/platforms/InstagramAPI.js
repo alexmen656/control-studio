@@ -1,8 +1,15 @@
 import dotenv from 'dotenv';
 import fs from 'fs/promises';
 import axios from 'axios';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config({ path: '.env' })
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT_DIR = path.join(__dirname, '..');
+const PROJECT_ROOT = path.join(__dirname, '..', '..');
+
+dotenv.config({ path: path.join(PROJECT_ROOT, '.env') })
 
 export function InstagramAuth() {
     const appId = process.env.IG_APP_ID;

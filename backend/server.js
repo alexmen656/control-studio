@@ -6,6 +6,7 @@ import path from 'path'
 import fs from 'fs'
 import axios from 'axios'
 import { fileURLToPath } from 'url'
+import dotenv from 'dotenv'
 import { uploadVideo, authorize, getTokenFromCode } from './platforms/YoutubeAPI.js'
 import { InstagramAuth, InstagramTokenExchange } from './platforms/InstagramAPI.js'
 import { FacebookAuth, FacebookTokenExchange } from './platforms/FacebookAPI.js'
@@ -13,6 +14,9 @@ import * as tiktokAPI from './platforms/TiktokAPI.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+const PROJECT_ROOT = path.join(__dirname, '..')
+
+dotenv.config({ path: path.join(PROJECT_ROOT, '.env') })
 
 const app = express()
 const PORT = process.env.PORT || 6709
@@ -154,10 +158,10 @@ app.post('/api/upload', upload.single('video'), (req, res) => {
 app.get('/api/accounts/status', (req, res) => {
   try {
     res.json({
-      youtube: fs.existsSync('token.json'),
-      tiktok: fs.existsSync('tiktok_token.json'),
-      instagram: fs.existsSync('instagram_token.json'),
-      facebook: fs.existsSync('facebook_token.json')
+      youtube: fs.existsSync(path.join(__dirname, 'token.json')),
+      tiktok: fs.existsSync(path.join(__dirname, 'tiktok_token.json')),
+      instagram: fs.existsSync(path.join(__dirname, 'instagram_token.json')),
+      facebook: fs.existsSync(path.join(__dirname, 'facebook_token.json'))
     })
   } catch (error) {
     console.error('Error checking account status:', error)
@@ -391,7 +395,7 @@ app.get('/api/oauth2callback/youtube', async (req, res) => {
   }
 
   try {
-    await fs.promises.writeFile('code.json', JSON.stringify(code));
+    await fs.promises.writeFile(path.join(__dirname, 'code.json'), JSON.stringify(code));
     await getTokenFromCode(code);
     res.redirect('http://localhost:5185/accounts');
     //res.send('YouTube authorization successful! You can close this tab.');
@@ -435,9 +439,9 @@ app.get('/api/oauth2callback/instagram', async (req, res) => {
   }
 
   try {
-    await fs.promises.writeFile('instagram_code.json', JSON.stringify(code));
+    await fs.promises.writeFile(path.join(__dirname, 'instagram_code.json'), JSON.stringify(code));
     axios.get(InstagramTokenExchange(code)).then(response => {
-      fs.promises.writeFile('instagram_token.json', JSON.stringify(response.data));
+      fs.promises.writeFile(path.join(__dirname, 'instagram_token.json'), JSON.stringify(response.data));
     });
     //return res.redirect();
     res.redirect('http://localhost:5185/accounts?instagram=connected');
@@ -459,9 +463,9 @@ app.get('/api/oauth2callback/facebook', async (req, res) => {
   }
 
   try {
-    await fs.promises.writeFile('facebook_code.json', JSON.stringify(code));
+    await fs.promises.writeFile(path.join(__dirname, 'facebook_code.json'), JSON.stringify(code));
     axios.get(FacebookTokenExchange(code)).then(response => {
-      fs.promises.writeFile('facebook_token.json', JSON.stringify(response.data));
+      fs.promises.writeFile(path.join(__dirname, 'facebook_token.json'), JSON.stringify(response.data));
     });
     //return res.redirect();
     res.redirect('http://localhost:5185/accounts?facebook=connected');
@@ -478,7 +482,7 @@ app.get('/api/oauth2callback/instagram/2', async (req, res) => {
     return res.status(400).send('Authorization code not provided');
   }
   try {
-    await fs.promises.writeFile('instagram_code_2.json', JSON.stringify(code));
+    await fs.promises.writeFile(path.join(__dirname, 'instagram_code_2.json'), JSON.stringify(code));
     res.redirect('http://localhost:5185/accounts?instagram=connected');
   }
   catch (error) {

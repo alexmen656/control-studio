@@ -1,7 +1,11 @@
 import fs from 'fs';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.join(__dirname, '..');
+dotenv.config({ path: path.join(PROJECT_ROOT, '.env') });
 
 import { uploadVideo } from './platforms/YoutubeAPI.js'
 import { uploadReel } from './platforms/InstagramAPI.js'
