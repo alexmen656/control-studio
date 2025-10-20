@@ -1,6 +1,5 @@
 # Control Studio
-Control Studio is very basic app which lets to upload videos to multiple plattforms at once or even to schedule them, currently supported plattforms are: Instagram, Facebook, TikTok and YouTube
-The main feature is privacy, since Control Studio is runnning locally on your device you dont need to be scared ot data leeks
+Control Studio is a very basic app that lets you upload videos to multiple platforms at once or even schedule them. Currently supported platforms are Instagram, Facebook, TikTok, and YouTube. The main feature is privacy — since Control Studio runs locally on your device, you don’t need to worry about data leaks.
 
 ## Demo Video
 **Here:** [YouTube](https://youtu.be/zlHvrEBCW9w)
