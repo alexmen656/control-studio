@@ -39,13 +39,24 @@ export async function authorize() {
 
         try {
             const token = await fs.readFile(TOKEN_PATH, 'utf-8');
-            console.log('Token found');
-            oAuth2Client.setCredentials(JSON.parse(token));
+            const tokenData = JSON.parse(token);
+
+            if (!tokenData.refresh_token) {
+                const authUrl = oAuth2Client.generateAuthUrl({
+                    access_type: 'offline',
+                    prompt: 'consent',
+                    scope: SCOPES,
+                });
+                return { authUrl };
+            }
+
+            oAuth2Client.setCredentials(tokenData);
             return oAuth2Client;
         } catch {
             console.log('No token found, need to get a new one');
             const authUrl = oAuth2Client.generateAuthUrl({
                 access_type: 'offline',
+                prompt: 'consent',
                 scope: SCOPES,
             });
             return { authUrl };
@@ -56,16 +67,6 @@ export async function authorize() {
     }
 }
 
-
-/*function getNewToken(oAuth2Client) {
-    const authUrl = oAuth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: SCOPES,
-    });
-
-    return JSON.stringify({ 'authUrl': authUrl });
-}*/
-
 export async function getTokenFromCode(code) {
     const content = await fs.readFile(CREDENTIALS_PATH, 'utf-8');
     const { client_secret, client_id, redirect_uris } = JSON.parse(content);
@@ -74,7 +75,7 @@ export async function getTokenFromCode(code) {
     const tokenResponse = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokenResponse.tokens);
 
-    await fs.writeFile(TOKEN_PATH, JSON.stringify(tokenResponse.tokens));
+    await fs.writeFile(TOKEN_PATH, JSON.stringify(tokenResponse.tokens, null, 2));
     console.log('Token stored to', TOKEN_PATH);
 }
 

@@ -249,7 +249,9 @@ app.patch('/api/videos/:id/duration', (req, res) => {
     console.error('Error updating duration:', error)
     res.status(500).json({ error: 'Error updating duration' })
   }
-})app.put('/api/videos/:id', (req, res) => {
+})
+
+app.put('/api/videos/:id', (req, res) => {
   try {
     const data = readVideos()
     const videoIndex = data.videos.findIndex(v => v.id === req.params.id)
