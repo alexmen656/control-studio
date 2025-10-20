@@ -6,7 +6,7 @@
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### Start frontend on port 5185, it has to be 5185!!!
 
 ```sh
 npm run dev -- --port 5185
@@ -17,7 +17,7 @@ npm run dev -- --port 5185
 cd backend
 ```
 
-### start backend
+### Start backend
 ```sh
 node server.js
 ```
