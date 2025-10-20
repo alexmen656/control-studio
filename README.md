@@ -12,12 +12,6 @@ npm install
 npm run dev -- --port 5185
 ```
 
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
 ### Go to backend dir
 ```sh
 cd backend
