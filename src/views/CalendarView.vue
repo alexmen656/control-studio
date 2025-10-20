@@ -135,7 +135,11 @@ const calendarDays = computed(() => {
         })
     }
 
-    const remainingDays = 42 - days.length
+    const totalDaysShown = days.length
+    const weeksNeeded = Math.ceil(totalDaysShown / 7)
+    const totalCells = weeksNeeded * 7
+    const remainingDays = totalCells - totalDaysShown
+
     for (let i = 1; i <= remainingDays; i++) {
         const date = new Date(year, month + 1, i)
         days.push({
@@ -182,7 +186,11 @@ const groupedByDate = computed(() => {
             if (!groups[dateKey]) {
                 groups[dateKey] = []
             }
-            groups[dateKey].push(video)
+
+            const dateGroup = groups[dateKey]
+            if (dateGroup) {
+                dateGroup.push(video)
+            }
         }
     })
 

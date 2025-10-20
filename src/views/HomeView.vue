@@ -55,11 +55,48 @@ const loadVideos = async () => {
         ...v,
         uploadDate: new Date(v.uploadDate)
       }))
+
+      videos.value.forEach(async (video) => {
+        if (video.duration === '0:00' && video.filename) {
+          updateVideoDuration(video)
+        }
+      })
     }
   } catch (error) {
     console.error('Error loading videos:', error)
   } finally {
     isLoading.value = false
+  }
+}
+
+const updateVideoDuration = async (video: Video) => {
+  try {
+    const videoElement = document.createElement('video')
+    videoElement.preload = 'metadata'
+
+    videoElement.onloadedmetadata = async () => {
+      const duration = videoElement.duration
+      const minutes = Math.floor(duration / 60)
+      const seconds = Math.floor(duration % 60)
+      const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`
+
+      const index = videos.value.findIndex(v => v.id === video.id)
+      if (index !== -1 && videos.value[index]) {
+        videos.value[index].duration = formattedDuration
+      }
+
+      await fetch(`${API_URL}/videos/${video.id}/duration`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duration: formattedDuration })
+      })
+
+      URL.revokeObjectURL(videoElement.src)
+    }
+
+    videoElement.src = `${API_URL.replace('/api', '')}/uploads/${video.filename}`
+  } catch (error) {
+    console.error('Error updating video duration:', error)
   }
 }
 
@@ -101,15 +138,17 @@ const uploadFiles = async (files: File[]) => {
         const result = await response.json()
         const index = videos.value.findIndex(v => v.id === tempId)
         if (index !== -1) {
-          videos.value[index] = {
+          const updatedVideo = {
             ...result.video,
             uploadDate: new Date(result.video.uploadDate),
             status: 'awaiting-details'
           }
+          videos.value[index] = updatedVideo
+          updateVideoDuration(updatedVideo)
         }
       } else {
         const index = videos.value.findIndex(v => v.id === tempId)
-        if (index !== -1) {
+        if (index !== -1 && videos.value[index]) {
           videos.value[index].status = 'failed'
         }
       }

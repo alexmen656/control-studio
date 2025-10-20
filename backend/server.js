@@ -7,10 +7,14 @@ import fs from 'fs'
 import axios from 'axios'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
+import { exec } from 'child_process'
+import { promisify } from 'util'
 import { uploadVideo, authorize, getTokenFromCode } from './platforms/YoutubeAPI.js'
 import { InstagramAuth, InstagramTokenExchange, uploadReel } from './platforms/InstagramAPI.js'
 import { FacebookAuth, FacebookTokenExchange, uploadVideo as uploadFacebookVideo } from './platforms/FacebookAPI.js'
 import * as tiktokAPI from './platforms/TiktokAPI.js'
+
+const execPromise = promisify(exec)
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -136,7 +140,7 @@ app.post('/api/upload', upload.single('video'), (req, res) => {
       filename: req.file.filename,
       originalName: req.file.originalname,
       thumbnail: req.body.thumbnail || 'https://via.placeholder.com/400x225',
-      duration: req.body.duration || '0:00',
+      duration: '0:00',
       size: stats.size,
       sizeBytes: stats.sizeBytes,
       uploadDate: new Date().toISOString(),
@@ -218,7 +222,34 @@ app.post('/api/upload-multiple', upload.array('videos', 10), (req, res) => {
   }
 })
 
-app.put('/api/videos/:id', (req, res) => {
+app.patch('/api/videos/:id/duration', (req, res) => {
+  try {
+    const { id } = req.params
+    const { duration } = req.body
+
+    if (!duration) {
+      return res.status(400).json({ error: 'Duration is required' })
+    }
+
+    const data = readVideos()
+    const videoIndex = data.videos.findIndex(v => v.id === id)
+
+    if (videoIndex === -1) {
+      return res.status(404).json({ error: 'Video not found' })
+    }
+
+    data.videos[videoIndex].duration = duration
+    writeVideos(data)
+
+    res.status(200).json({
+      message: 'Duration updated successfully',
+      video: data.videos[videoIndex]
+    })
+  } catch (error) {
+    console.error('Error updating duration:', error)
+    res.status(500).json({ error: 'Error updating duration' })
+  }
+})app.put('/api/videos/:id', (req, res) => {
   try {
     const data = readVideos()
     const videoIndex = data.videos.findIndex(v => v.id === req.params.id)
