@@ -1,4 +1,5 @@
 # Control Studio
+Control Studio is very basic app which lets to upload videos to multiple plattforms at once or even to schedule them, currently supported plattforms are: Instagram, Facebook, TikTok and YouTube
 
 ## Project Setup
 
@@ -32,8 +33,25 @@ IG_APP_ID=your_instagram_app_id_here
 IG_APP_SECRET=your_instagram_app_secret_here
 ```
 
-### Start scheduler script
+### And in backend/plattforms/ you need to add credentials.json, you can this file from Google Cloud, it looks like this:
+
 ```sh
+{
+  "client_id": "",
+  "project_id": "",
+  "auth_uri": "",
+  "token_uri": "",
+  "auth_provider_x509_cert_url": "",
+  "client_secret": "",
+  "redirect_uris": [ your redirects uris here ],
+  "javascript_origins": [
+   your origins here
+  ]
+}
+```
+
+### Start scheduler script
+
 ```sh
 cd backend
 ```
