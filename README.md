@@ -1,6 +1,5 @@
-# social-media-manager
+# Control Studio
 
-This template should help get you started developing with Vue 3 in Vite.
 
 ## Recommended IDE Setup
 
