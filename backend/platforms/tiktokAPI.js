@@ -169,9 +169,7 @@ export async function refreshAccessToken() {
 export async function uploadVideo(videoPath, title, description, privacyLevel = 'SELF_ONLY') {
     try {
         const tokenData = JSON.parse(await fs.readFile(TOKEN_PATH, 'utf-8'));
-        console.log('Using access token:', tokenData);
         const accessToken = tokenData.access_token;
-        console.log('Access Token:', accessToken);
 
         let chunkSize = 128 * 1024 * 1024; // 4MB
         const fileStat = await fs.stat(videoPath);

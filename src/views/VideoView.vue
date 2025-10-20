@@ -290,8 +290,8 @@ const averageEngagement = computed(() => {
             </div>
         </div>
         <div v-else class="flex-1 overflow-y-auto">
-            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6">
-                <div class="flex items-start justify-between mb-4">
+            <div class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-8 py-6">
+                <div class="flex items-start justify-between mb-2">
                     <div class="flex-1 mr-6">
                         <div class="flex items-center gap-3 mb-2">
                             <button @click="router.push({ name: 'home' })"
@@ -380,8 +380,9 @@ const averageEngagement = computed(() => {
                                 </div>
                             </div>
                         </div>
-                        <div v-if="platformAnalytics.length > 0"
-                            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                        <div v-if="platformAnalytics.length > 0 && '1' == '2'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200
+                            dark:border-gray-700 p-6"><!-- Temporarily disable analytics
+                            display because I had no time to finish it-->
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Performance
                                 Analytics</h3>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -496,6 +497,24 @@ const averageEngagement = computed(() => {
                                 </button>
                             </div>
                         </div>
+
+                        <div
+                            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Target Platforms
+                            </h3>
+                            <div v-if="currentVideo.platforms && currentVideo.platforms.length > 0" class="space-y-3">
+                                <div v-for="platform in currentVideo.platforms" :key="platform"
+                                    class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                    <div
+                                        :class="['w-10 h-10 rounded-lg flex items-center justify-center text-white', getPlatformColor(platform)]">
+                                        <div v-html="getPlatformIcon(platform)"></div>
+                                    </div>
+                                    <span class="font-medium text-gray-900 dark:text-gray-100 capitalize">{{ platform
+                                    }}</span>
+                                </div>
+                            </div>
+                            <p v-else class="text-sm text-gray-500 dark:text-gray-400">No platforms selected</p>
+                        </div>
                         <div
                             class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Video Info</h3>
@@ -521,23 +540,6 @@ const averageEngagement = computed(() => {
                                         formatDate(currentVideo.scheduledDate) }}</dd>
                                 </div>
                             </dl>
-                        </div>
-                        <div
-                            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Target Platforms
-                            </h3>
-                            <div v-if="currentVideo.platforms && currentVideo.platforms.length > 0" class="space-y-3">
-                                <div v-for="platform in currentVideo.platforms" :key="platform"
-                                    class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                    <div
-                                        :class="['w-10 h-10 rounded-lg flex items-center justify-center text-white', getPlatformColor(platform)]">
-                                        <div v-html="getPlatformIcon(platform)"></div>
-                                    </div>
-                                    <span class="font-medium text-gray-900 dark:text-gray-100 capitalize">{{ platform
-                                        }}</span>
-                                </div>
-                            </div>
-                            <p v-else class="text-sm text-gray-500 dark:text-gray-400">No platforms selected</p>
                         </div>
                     </div>
                 </div>
@@ -595,7 +597,7 @@ const averageEngagement = computed(() => {
                                     <div v-html="getPlatformIcon(platform)"></div>
                                 </div>
                                 <span class="font-medium text-gray-900 dark:text-gray-100 capitalize">{{ platform
-                                    }}</span>
+                                }}</span>
                                 <div v-if="selectedPlatforms.includes(platform as any)" class="ml-auto">
                                     <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd"
@@ -680,7 +682,7 @@ const averageEngagement = computed(() => {
                                     <div v-html="getPlatformIcon(platform)"></div>
                                 </div>
                                 <span class="font-medium text-gray-900 dark:text-gray-100 capitalize">{{ platform
-                                    }}</span>
+                                }}</span>
                                 <div v-if="videoDetailsForm.platforms.includes(platform as any)" class="ml-auto">
                                     <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd"

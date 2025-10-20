@@ -87,10 +87,10 @@ async function uploadToYouTube(auth, videoFile) {
             {
                 resource: {
                     snippet: {
-                        title: 'My AI Reddit Story',
-                        description: 'Automatically uploaded by my bot!',
-                        tags: ['Reddit', 'Minecraft', 'AI Story'],
-                        categoryId: '22',
+                        title: videoFile.title || 'Untitled Video',
+                        description: videoFile.description || 'Automatically uploaded by my bot!',
+                        tags: videoFile.tags || [],
+                        categoryId: videoFile.categoryId || '22',
                     },
                     status: {
                         privacyStatus: 'public',
