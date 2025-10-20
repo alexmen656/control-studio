@@ -22,7 +22,7 @@
                         <div class="text-xs text-gray-500 dark:text-gray-400">Create a new post (coming soon)</div>
                     </div>
                 </button>-->
-                <button @click="triggerFileUpload"
+                <button @click="triggerVideoUpload"
                     class="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors">
                     <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd"
@@ -35,7 +35,6 @@
                     </div>
                 </button>
             </div>
-            <input ref="fileInput" type="file" multiple class="hidden" @change="handleFileUpload" />
         </div>
         <nav class="flex-1 px-2 space-y-1 overflow-y-auto">
             <router-link to="/dashboard"
@@ -88,7 +87,7 @@
                 <div class="space-y-2">
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-gray-600 dark:text-gray-400">{{ storageUsed }} {{ unit }} of {{ storageTotal
-                        }}
+                            }}
                             GB
                             used</span>
                     </div>
@@ -130,6 +129,22 @@ export default {
         this.fetchUsedStorage();
     },
     methods: {
+        triggerVideoUpload() {
+            this.showNewDropdown = false;
+            if (this.$route.path !== '/dashboard') {
+                this.$router.push('/dashboard').then(() => {
+                    setTimeout(() => {
+                        const vueApp = (window as any).vueApp;
+                        if (vueApp) {
+                            vueApp.config.globalProperties.$eventBus = vueApp.config.globalProperties.$eventBus || {};
+                            window.dispatchEvent(new CustomEvent('open-upload-modal'));
+                        }
+                    }, 100);
+                });
+            } else {
+                window.dispatchEvent(new CustomEvent('open-upload-modal'));
+            }
+        },
         fetchUsedStorage() {
             axios.get('http://localhost:6709/api/used-storage').then(res => {
                 this.usedBytes = Number(res.data.used_storage);

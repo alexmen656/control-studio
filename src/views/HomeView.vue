@@ -173,6 +173,16 @@ const handleDrop = (event: DragEvent) => {
 
 onMounted(() => {
   loadVideos()
+
+  const handleOpenUploadModal = () => {
+    showUploadModal.value = true
+  }
+
+  window.addEventListener('open-upload-modal', handleOpenUploadModal)
+
+  return () => {
+    window.removeEventListener('open-upload-modal', handleOpenUploadModal)
+  }
 })
 
 const filteredVideos = computed(() => {
@@ -378,8 +388,8 @@ const saveVideoDetails = async () => {
         <div v-for="video in filteredVideos" :key="video.id"
           class="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg border border-gray-200 dark:border-gray-700 transition-all overflow-hidden">
           <div class="relative aspect-video bg-gray-200 dark:bg-gray-700 overflow-hidden">
-            <video v-if="video.filename" class="w-full h-full object-cover" muted>
-              <source :src="`http://localhost:6709/uploads/${video.filename}`" type="video/mp4">
+            <video v-if="video.filename" class="w-full h-full object-cover" muted preload="metadata"
+              :src="`http://localhost:6709/uploads/${video.filename}#t=0.1`">
             </video>
             <div v-else class="w-full h-full flex items-center justify-center">
               <svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -389,7 +399,7 @@ const saveVideoDetails = async () => {
               </svg>
             </div>
             <div
-              class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center">
+              class="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center">
               <button @click="router.push({ name: 'video', params: { id: video.id } })"
                 class="opacity-0 group-hover:opacity-100 bg-white text-gray-900 rounded-full p-3 shadow-lg hover:scale-110 transition-all">
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -575,7 +585,8 @@ const saveVideoDetails = async () => {
         </button>
       </div>
     </div>
-    <div v-if="showUploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    <div v-if="showUploadModal"
+      class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       @click="showUploadModal = false">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full p-8" @click.stop>
         <div class="flex items-center justify-between mb-6">
@@ -605,7 +616,8 @@ const saveVideoDetails = async () => {
         </div>
       </div>
     </div>
-    <div v-if="showDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    <div v-if="showDetailsModal"
+      class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       @click="closeDetailsModal">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
         @click.stop>

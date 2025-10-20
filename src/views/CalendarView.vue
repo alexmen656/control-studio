@@ -21,6 +21,8 @@ interface Video {
     description?: string
     tags?: string[]
     scheduledDate?: Date | string
+    publishedAt?: Date | string
+    publishStatus?: { [key: string]: string | 'failed' }
 }
 
 const videos = ref<Video[]>([])
@@ -37,7 +39,8 @@ const loadVideos = async () => {
             videos.value = data.map((v: any) => ({
                 ...v,
                 uploadDate: new Date(v.uploadDate),
-                scheduledDate: v.scheduledDate ? new Date(v.scheduledDate) : undefined
+                scheduledDate: v.scheduledDate ? new Date(v.scheduledDate) : undefined,
+                publishedAt: v.publishedAt ? new Date(v.publishedAt) : undefined
             }))
         }
     } catch (error) {
@@ -52,13 +55,25 @@ const scheduledVideos = computed(() => {
 })
 
 const publishedVideos = computed(() => {
-    return videos.value.filter(v => v.status === 'published' && v.scheduledDate)
+    return videos.value.filter(v =>
+        v.status === 'published' && v.publishedAt
+    )
 })
 
 const allScheduledVideos = computed(() => {
-    return [...scheduledVideos.value, ...publishedVideos.value].sort((a, b) => {
-        const dateA = new Date(a.scheduledDate!).getTime()
-        const dateB = new Date(b.scheduledDate!).getTime()
+    const scheduled = scheduledVideos.value.map(v => ({
+        ...v,
+        displayDate: v.scheduledDate
+    }))
+
+    const published = publishedVideos.value.map(v => ({
+        ...v,
+        displayDate: v.publishedAt
+    }))
+
+    return [...scheduled, ...published].sort((a, b) => {
+        const dateA = new Date(a.displayDate!).getTime()
+        const dateB = new Date(b.displayDate!).getTime()
         return dateA - dateB
     })
 })
@@ -137,9 +152,17 @@ const calendarDays = computed(() => {
 
 const getVideosForDate = (date: Date): Video[] => {
     return allScheduledVideos.value.filter(v => {
-        if (!v.scheduledDate) return false
-        const schedDate = new Date(v.scheduledDate)
-        return schedDate.toDateString() === date.toDateString()
+
+        if (v.status === 'scheduled' && v.scheduledDate) {
+            const schedDate = new Date(v.scheduledDate)
+            return schedDate.toDateString() === date.toDateString()
+        }
+
+        if (v.status === 'published' && v.publishedAt) {
+            const pubDate = new Date(v.publishedAt)
+            return pubDate.toDateString() === date.toDateString()
+        }
+        return false
     })
 }
 
@@ -147,8 +170,15 @@ const groupedByDate = computed(() => {
     const groups: { [key: string]: Video[] } = {}
 
     allScheduledVideos.value.forEach(video => {
-        if (video.scheduledDate) {
-            const dateKey = new Date(video.scheduledDate).toDateString()
+        let dateKey: string | null = null
+
+        if (video.status === 'scheduled' && video.scheduledDate) {
+            dateKey = new Date(video.scheduledDate).toDateString()
+        } else if (video.status === 'published' && video.publishedAt) {
+            dateKey = new Date(video.publishedAt).toDateString()
+        }
+
+        if (dateKey) {
             if (!groups[dateKey]) {
                 groups[dateKey] = []
             }
@@ -194,6 +224,25 @@ const getStatusColor = (status: string) => {
         published: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
     }
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-700'
+}
+
+const getPlatformStatus = (video: Video, platform: string): 'success' | 'failed' | 'pending' => {
+    if (video.status === 'published' && video.publishStatus) {
+        const status = video.publishStatus[platform]
+        if (status === 'failed') return 'failed'
+        if (status && status !== 'failed') return 'success' // Es ist ein Datum
+    }
+    return 'pending'
+}
+
+const getPlatformIconWithStatus = (platform: string, status: 'success' | 'failed' | 'pending') => {
+    const baseIcon = getPlatformIcon(platform)
+    if (status === 'success') {
+        return baseIcon.replace('class="w-4 h-4"', 'class="w-4 h-4 text-green-600 dark:text-green-400"')
+    } else if (status === 'failed') {
+        return baseIcon.replace('class="w-4 h-4"', 'class="w-4 h-4 text-red-600 dark:text-red-400 opacity-50"')
+    }
+    return baseIcon
 }
 
 onMounted(() => {
@@ -304,10 +353,14 @@ onMounted(() => {
                                 ]">
                                 <div class="font-medium truncate">{{ video.title }}</div>
                                 <div class="flex items-center gap-1 mt-0.5">
-                                    <span class="text-[10px]">{{ formatTime(video.scheduledDate!) }}</span>
+                                    <span class="text-[10px]">{{
+                                        formatTime(video.status === 'published' && video.publishedAt
+                                            ? video.publishedAt
+                                            : video.scheduledDate!)
+                                    }}</span>
                                     <div class="flex gap-0.5 ml-auto">
                                         <span v-for="platform in video.platforms.slice(0, 2)" :key="platform"
-                                            v-html="getPlatformIcon(platform)"></span>
+                                            v-html="getPlatformIconWithStatus(platform, getPlatformStatus(video, platform))"></span>
                                     </div>
                                 </div>
                             </div>
@@ -328,9 +381,10 @@ onMounted(() => {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No scheduled videos</h3>
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No scheduled or published videos
+                </h3>
                 <p class="text-gray-500 dark:text-gray-400 mb-6">
-                    Videos you schedule will appear here
+                    Scheduled and published videos will appear here
                 </p>
             </div>
 
@@ -354,9 +408,9 @@ onMounted(() => {
                             <div class="flex items-start gap-4">
                                 <div
                                     class="relative w-32 h-20 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                                    <video v-if="video.filename" class="w-full h-full object-cover" muted>
-                                        <source :src="`http://localhost:6709/uploads/${video.filename}`"
-                                            type="video/mp4">
+                                    <video v-if="video.filename" class="w-full h-full object-cover" muted
+                                        preload="metadata"
+                                        :src="`http://localhost:6709/uploads/${video.filename}#t=0.1`">
                                     </video>
                                     <div v-else class="w-full h-full flex items-center justify-center">
                                         <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -390,14 +444,18 @@ onMounted(() => {
                                                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
                                                     clip-rule="evenodd" />
                                             </svg>
-                                            <span class="font-medium">{{ formatTime(video.scheduledDate!) }}</span>
+                                            <span class="font-medium">{{
+                                                formatTime(video.status === 'published' && video.publishedAt
+                                                    ? video.publishedAt
+                                                    : video.scheduledDate!)
+                                            }}</span>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <span class="text-gray-500 dark:text-gray-400">Platforms:</span>
                                             <div class="flex gap-1.5">
                                                 <span v-for="platform in video.platforms" :key="platform"
-                                                    class="text-gray-600 dark:text-gray-400" :title="platform"
-                                                    v-html="getPlatformIcon(platform)">
+                                                    :title="platform + (video.status === 'published' ? (getPlatformStatus(video, platform) === 'success' ? ' (published)' : getPlatformStatus(video, platform) === 'failed' ? ' (failed)' : ' (pending)') : '')"
+                                                    v-html="getPlatformIconWithStatus(platform, getPlatformStatus(video, platform))">
                                                 </span>
                                             </div>
                                         </div>

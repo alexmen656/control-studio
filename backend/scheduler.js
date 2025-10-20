@@ -35,16 +35,29 @@ function updateVideoStatus(videoId, platformStatuses) {
     const videoIndex = data.videos.findIndex(v => v.id === videoId)
 
     if (videoIndex !== -1) {
-        data.videos[videoIndex].publishStatus = platformStatuses
-        data.videos[videoIndex].updatedAt = new Date().toISOString()
+        const currentDate = new Date().toISOString()
+
+        const publishStatusWithDates = {}
+        Object.entries(platformStatuses).forEach(([platform, status]) => {
+            if (status === 'success') {
+                publishStatusWithDates[platform] = currentDate
+            } else {
+                publishStatusWithDates[platform] = 'failed'
+            }
+        })
+
+        data.videos[videoIndex].publishStatus = publishStatusWithDates
+        data.videos[videoIndex].updatedAt = currentDate
 
         const allSuccess = Object.values(platformStatuses).every(status => status === 'success')
         const anySuccess = Object.values(platformStatuses).some(status => status === 'success')
 
         if (allSuccess) {
             data.videos[videoIndex].status = 'published'
+            data.videos[videoIndex].publishedAt = currentDate
         } else if (anySuccess) {
             data.videos[videoIndex].status = 'partially-published'
+            data.videos[videoIndex].publishedAt = currentDate
         } else {
             data.videos[videoIndex].status = 'failed'
         }
@@ -74,7 +87,7 @@ async function publishVideo(video) {
             try {
                 await uploadVideo(video)
                 platformStatuses.youtube = 'success'
-                console.log('✓ YouTube: Published successfully')
+                console.log(`✓ YouTube: Published successfully at ${new Date().toLocaleString()}`)
             } catch (error) {
                 platformStatuses.youtube = 'failed'
                 console.error('✗ YouTube: Failed -', error.message)
@@ -86,7 +99,7 @@ async function publishVideo(video) {
             try {
                 await tiktokAPI.uploadVideo(video.path, video.title)
                 platformStatuses.tiktok = 'success'
-                console.log('✓ TikTok: Published successfully')
+                console.log(`✓ TikTok: Published successfully at ${new Date().toLocaleString()}`)
             } catch (error) {
                 platformStatuses.tiktok = 'failed'
                 console.error('✗ TikTok: Failed -', error.message)
@@ -103,7 +116,7 @@ async function publishVideo(video) {
             try {
                 await uploadReel({ path: videoFile }, options)
                 platformStatuses.instagram = 'success'
-                console.log('✓ Instagram: Published successfully')
+                console.log(`✓ Instagram: Published successfully at ${new Date().toLocaleString()}`)
             } catch (error) {
                 platformStatuses.instagram = 'failed'
                 console.error('✗ Instagram: Failed -', error.message)
@@ -121,7 +134,7 @@ async function publishVideo(video) {
             try {
                 await uploadFacebookVideo({ path: videoFile }, options)
                 platformStatuses.facebook = 'success'
-                console.log('✓ Facebook: Published successfully')
+                console.log(`✓ Facebook: Published successfully at ${new Date().toLocaleString()}`)
             } catch (error) {
                 platformStatuses.facebook = 'failed'
                 console.error('✗ Facebook: Failed -', error.message)

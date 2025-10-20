@@ -522,7 +522,7 @@ app.post('/api/publish', async (req, res) => {
       try {
         await uploadVideo(video)
         platformStatuses.youtube = 'success'
-        console.log('✓ YouTube: Published successfully')
+        console.log(`✓ YouTube: Published successfully at ${new Date().toLocaleString()}`)
       } catch (error) {
         platformStatuses.youtube = 'failed'
         console.error('✗ YouTube: Failed -', error.message)
@@ -534,7 +534,7 @@ app.post('/api/publish', async (req, res) => {
       try {
         await tiktokAPI.uploadVideo(video.path, video.title)
         platformStatuses.tiktok = 'success'
-        console.log('✓ TikTok: Published successfully')
+        console.log(`✓ TikTok: Published successfully at ${new Date().toLocaleString()}`)
       } catch (error) {
         platformStatuses.tiktok = 'failed'
         console.error('✗ TikTok: Failed -', error.message)
@@ -551,7 +551,7 @@ app.post('/api/publish', async (req, res) => {
       try {
         await uploadReel({ path: videoFile }, options)
         platformStatuses.instagram = 'success'
-        console.log('✓ Instagram: Published successfully')
+        console.log(`✓ Instagram: Published successfully at ${new Date().toLocaleString()}`)
       } catch (error) {
         platformStatuses.instagram = 'failed'
         console.error('✗ Instagram: Failed -', error.message)
@@ -569,7 +569,7 @@ app.post('/api/publish', async (req, res) => {
       try {
         await uploadFacebookVideo({ path: videoFile }, options)
         platformStatuses.facebook = 'success'
-        console.log('✓ Facebook: Published successfully')
+        console.log(`✓ Facebook: Published successfully at ${new Date().toLocaleString()}`)
       } catch (error) {
         platformStatuses.facebook = 'failed'
         console.error('✗ Facebook: Failed -', error.message)
@@ -580,16 +580,29 @@ app.post('/api/publish', async (req, res) => {
     const videoIndex = updatedData.videos.findIndex(v => v.id === req.body.videoId)
 
     if (videoIndex !== -1) {
-      updatedData.videos[videoIndex].publishStatus = platformStatuses
-      updatedData.videos[videoIndex].updatedAt = new Date().toISOString()
+      const currentDate = new Date().toISOString()
+
+      const publishStatusWithDates = {}
+      Object.entries(platformStatuses).forEach(([platform, status]) => {
+        if (status === 'success') {
+          publishStatusWithDates[platform] = currentDate
+        } else {
+          publishStatusWithDates[platform] = 'failed'
+        }
+      })
+
+      updatedData.videos[videoIndex].publishStatus = publishStatusWithDates
+      updatedData.videos[videoIndex].updatedAt = currentDate
 
       const allSuccess = Object.values(platformStatuses).every(status => status === 'success')
       const anySuccess = Object.values(platformStatuses).some(status => status === 'success')
 
       if (allSuccess) {
         updatedData.videos[videoIndex].status = 'published'
+        updatedData.videos[videoIndex].publishedAt = currentDate
       } else if (anySuccess) {
         updatedData.videos[videoIndex].status = 'partially-published'
+        updatedData.videos[videoIndex].publishedAt = currentDate
       } else {
         updatedData.videos[videoIndex].status = 'failed'
       }
