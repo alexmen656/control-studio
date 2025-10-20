@@ -32,6 +32,16 @@ IG_APP_ID=your_instagram_app_id_here
 IG_APP_SECRET=your_instagram_app_secret_here
 ```
 
+### Start scheduler script
+```sh
+```sh
+cd backend
+```
+
+```sh
+node scheduler.js
+```
+
 
 
 ## Recommended IDE Setup
