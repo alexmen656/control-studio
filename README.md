@@ -22,6 +22,15 @@ cd backend
 node server.js
 ```
 
+### Additionally you need to add your .env file, with this values:
+
+```sh
+TIKTOK_CLIENT_KEY=your_tiktok_client_key_here
+TIKTOK_CLIENT_SECRET=your_tiktok_client_secret_here
+
+IG_APP_ID=your_instagram_app_id_here
+IG_APP_SECRET=your_instagram_app_secret_here
+```
 
 
 
