@@ -9,7 +9,7 @@ npm install
 ### Compile and Hot-Reload for Development
 
 ```sh
-npm run dev
+npm run dev -- --port 5185
 ```
 
 ### Type-Check, Compile and Minify for Production
@@ -17,6 +17,18 @@ npm run dev
 ```sh
 npm run build
 ```
+
+### Go to backend dir
+```sh
+cd backend
+```
+
+### start backend
+```sh
+node server.js
+```
+
+
 
 
 ## Recommended IDE Setup
